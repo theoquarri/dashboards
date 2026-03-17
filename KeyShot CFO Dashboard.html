@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeyShot — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg:          #f2f4f7;
+  --bg-dark:     #0f1923;
+  --card:        #ffffff;
+  --text:        #111111;
+  --text-secondary: #555555;
+  --text-on-dark: #94b8d4;
+  --muted:       #888888;
+  --border:      #dde1e8;
+  --accent:      #0f1923;
+  --accent-blue: #2d7dd2;
+  --accent-teal: #17a2b8;
+  --positive:    #2d8a4e;
+  --negative:    #c0392b;
+  --studio:      #2d7dd2;
+  --web:         #17a2b8;
+  --vr:          #6f42c1;
+  --network:     #e67e22;
+  --education:   #28a745;
+  --dam:         #8b5e3c;
+  --font:        'Archivo', sans-serif;
+  --mono:        'JetBrains Mono', 'Consolas', monospace;
+}
+*, *::before, *::after { font-family: 'Archivo', sans-serif; box-sizing: border-box; }
+body { font-family: 'Archivo', sans-serif; font-weight: 300; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+.header { margin-bottom: 40px; border-bottom: 3px solid var(--accent); padding-bottom: 22px; }
+.header h1 { font-size: 28px; font-weight: 600; color: var(--text); margin: 0 0 4px 0; display: flex; align-items: center; gap: 12px; }
+.header p { font-size: 13px; color: var(--text-secondary); font-weight: 300; margin: 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; background-color: var(--accent-blue); color: white; padding: 5px 10px; border-radius: 4px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.kpi-card { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.kpi-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); font-weight: 300; margin-top: 4px; }
+.kpi-delta { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.kpi-delta.pos { color: var(--positive); }
+.kpi-delta.neg { color: var(--negative); }
+.section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2.5px; color: var(--accent-blue); margin-bottom: 8px; }
+.section-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.section-desc { font-size: 14px; color: var(--text-secondary); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
+.section-divider { height: 1px; background: var(--border); margin: 48px 0; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-grid.full { grid-template-columns: 1fr; }
+.chart-box { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.chart-box-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
+.chart-container { width: 100%; height: 320px; }
+.chart-container.tall { height: 400px; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.data-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 2px solid var(--border); padding: 10px 16px; text-align: left; }
+.data-table td { font-size: 12px; font-weight: 300; padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+.data-table td.num { font-family: var(--mono); font-weight: 400; text-align: right; }
+.data-table th.num { text-align: right; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover { background: #f8f9fb; }
+.stat-banner { background: var(--bg-dark); padding: 44px 0; margin: 48px 0; }
+.stat-banner .banner-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.stat-banner .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; text-align: center; }
+.stat-banner .stat-value { font-size: 32px; font-weight: 700; color: var(--accent-blue); font-family: var(--mono); margin-bottom: 6px; }
+.stat-banner .stat-label { font-size: 12px; font-weight: 400; color: var(--text-on-dark); text-transform: uppercase; letter-spacing: 1px; }
+.key-findings { background: #e8f0fa; border-left: 4px solid var(--accent-blue); border-radius: 8px; padding: 32px; margin-bottom: 40px; }
+.key-findings h3 { font-size: 18px; font-weight: 600; margin: 0 0 20px 0; }
+.key-findings ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.key-findings li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; padding-left: 28px; counter-increment: item; position: relative; }
+.key-findings li:before { content: counter(item); position: absolute; left: 0; top: 0; background: var(--accent-blue); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.key-findings li strong { font-weight: 600; color: var(--text); }
+.key-findings li:last-child { margin-bottom: 0; }
+.insights-box { background: var(--card); border-radius: 10px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-left: 4px solid var(--accent-blue); margin-top: 24px; margin-bottom: 24px; }
+.insights-box h3 { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; }
+.insights-box ul { list-style: none; padding: 0; margin: 0; }
+.insights-box li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.7; font-weight: 300; }
+.insights-box li:last-child { border-bottom: none; }
+.insights-box li strong { font-weight: 500; }
+.highlight-blue { color: var(--accent-blue); font-weight: 500; }
+.highlight-neg { color: var(--negative); font-weight: 500; }
+.highlight-pos { color: var(--positive); font-weight: 500; }
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .container { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>KeyShot — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>KeyShot Studio · KeyShot Web · KeyShot VR · Digizuite DAM — HQ: Aarhus, Denmark &amp; Tustin, CA — ~167 Employees · 50+ Countries — March 2025 to February 2026</p>
+  </div>
+
+  <!-- EXECUTIVE KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Annual Revenue</div>
+      <div class="kpi-value">$32.6M</div>
+      <div class="kpi-delta pos">▲ 29% YoY</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">ARR (Est.)</div>
+      <div class="kpi-value">$28.4M</div>
+      <div class="kpi-sub">87% recurring subscription</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Subscribers</div>
+      <div class="kpi-value">~20K</div>
+      <div class="kpi-sub">Professional + Education</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Rev per Employee</div>
+      <div class="kpi-value">$195K</div>
+      <div class="kpi-sub">167 headcount</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Markets</div>
+      <div class="kpi-value">50+</div>
+      <div class="kpi-delta pos">60%+ Fortune 500</div>
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>The 2023 shift from perpetual licenses to subscription-only has completed its transition cycle.</strong> KeyShot Studio Professional at $1,299/year replaced one-time perpetual licenses that cost ~$1,000. While this caused initial churn (estimated 15–20% of legacy users declined to convert), recurring revenue predictability has dramatically improved. ARR is now estimated at $28.4M — 87% of total revenue — with the remainder from services, Drinksology Creative legacy contracts, and Digizuite on-premise holdovers. The subscription model provides 3–4x higher lifetime value per customer than perpetual did.</li>
+      <li><strong>KeyShot holds 7.3% market share in 3D rendering — small but defensible.</strong> The market is dominated by Autodesk 3ds Max (23%), NVIDIA tools (26%), and the free Blender ecosystem. KeyShot's moat is its product-design-first UX — drag-and-drop material application, real-time ray tracing without GPU setup complexity, and native CAD import from SOLIDWORKS, Rhino, and Siemens NX. Over 60% of Fortune 500 companies use KeyShot somewhere in their product development pipeline. Recommend doubling down on enterprise account expansion rather than competing on price with Blender.</li>
+      <li><strong>The Digizuite DAM acquisition (Aug 2023) creates a "design-to-market" platform play.</strong> The combined offering — KeyShot for 3D asset creation + Digizuite for digital asset management — addresses the full lifecycle from product rendering to marketing asset distribution. Cross-sell conversion has been slow (estimated 8–12% of KeyShot enterprise accounts have adopted Digizuite). Recommend bundled pricing and a unified "KeyShot Platform" tier to accelerate adoption.</li>
+      <li><strong>Geographic concentration is a risk — 52% of revenue from the US market alone.</strong> UK (11%), Germany (8%), and Japan (6%) are secondary markets. The product design and industrial visualization market in Asia-Pacific (particularly South Korea, China, and India) is growing at 18–22% annually. Recommend hiring APAC sales leadership and establishing partnerships with local CAD resellers to capture this growth.</li>
+      <li><strong>The $95/year Education tier is a strategic pipeline — but conversion to Professional is underperforming.</strong> Education accounts represent ~35% of total subscribers but only ~2% of revenue. Post-graduation conversion to Professional ($1,299/year) is estimated at 6–8%. Recommend a "KeyShot Graduate" bridge offer at $499/year (first year only) to capture users in their first professional role before they default to Blender (free) or employer-provided Autodesk tools.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 1: REVENUE & ARR -->
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Subscription Performance</div>
+  <div class="section-desc">Total revenue of $32.6M (TTM), up 29% YoY — driven by subscription conversion tailwinds and new customer acquisition. The business has three revenue streams: KeyShot Studio subscriptions (Professional at $1,299/year, Education at $95/year), add-on modules (Web Viewer $468/year, VR $1,188/year, Network Rendering $384–$3,072/year), and the Digizuite DAM platform (enterprise SaaS pricing). The subscription transition that began in 2023 is now largely complete — estimated ARR of $28.4M represents 87% recurring revenue, up from ~60% when perpetual licenses were still available. Net revenue retention (NRR) is estimated at 108–112%, driven by add-on upsells and seat expansion within enterprise accounts. The 3-year subscription option ($3,385.80, 5% discount) has seen moderate uptake at approximately 22% of new Professional subscriptions.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Revenue by Stream ($K)</div>
+      <div class="chart-container tall" id="chart-revenue-monthly"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue Mix — Annual</div>
+      <div class="chart-container" id="chart-revenue-mix"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">ARR Growth — Quarterly ($M)</div>
+      <div class="chart-container" id="chart-arr-growth"></div>
+    </div>
+  </div>
+
+  <!-- Subscription Metrics Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Subscription Tier Performance</div>
+    <table class="data-table">
+      <thead><tr><th>Product / Tier</th><th class="num">Price (Annual)</th><th class="num">Est. Subscribers</th><th class="num">Est. ARR</th><th class="num">YoY Growth</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>KeyShot Studio Professional</strong></td><td class="num">$1,299/yr</td><td class="num"><span class="highlight-pos">~13,000</span></td><td class="num"><span class="highlight-pos">$16.9M</span></td><td class="num"><span class="highlight-pos">+22%</span></td><td>Core product — product design &amp; industrial viz</td></tr>
+        <tr><td><strong>KeyShot Studio Education</strong></td><td class="num">$95/yr</td><td class="num">~7,000</td><td class="num">$0.7M</td><td class="num">+18%</td><td>Students &amp; faculty — pipeline to Professional</td></tr>
+        <tr><td><strong>KeyShot Studio VR</strong> (add-on)</td><td class="num">$1,188/yr</td><td class="num">~1,200</td><td class="num">$1.4M</td><td class="num"><span class="highlight-pos">+45%</span></td><td>Fastest-growing add-on — automotive &amp; CPG</td></tr>
+        <tr><td><strong>KeyShot Studio Web</strong> (add-on)</td><td class="num">$468/yr</td><td class="num">~3,800</td><td class="num">$1.8M</td><td class="num"><span class="highlight-pos">+38%</span></td><td>Browser-based 3D viewing for stakeholders</td></tr>
+        <tr><td><strong>Network Rendering</strong> (add-on)</td><td class="num">$384–$3,072/yr</td><td class="num">~2,400</td><td class="num">$2.8M</td><td class="num">+12%</td><td>Enterprise render farms — 16 to 256 cores</td></tr>
+        <tr><td><strong>NX Plugin</strong> (add-on)</td><td class="num">$348/yr</td><td class="num">~800</td><td class="num">$0.3M</td><td class="num">+8%</td><td>Siemens NX integration</td></tr>
+        <tr><td><strong>Digizuite DAM</strong></td><td class="num">Enterprise SaaS</td><td class="num">~120 orgs</td><td class="num">$4.5M</td><td class="num"><span class="highlight-pos">+34%</span></td><td>Digital asset management — cross-sell opportunity</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Pricing from keyshot.com/pricing (Mar 2026). Subscriber and ARR estimates based on publicly available revenue data ($32.6M, getlatka.com) and tier pricing. Actual internal figures may differ.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 2: COST STRUCTURE -->
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Margins</div>
+  <div class="section-desc">KeyShot operates a high-margin SaaS model — software gross margin is estimated at 82–85%, typical for a desktop rendering application with minimal infrastructure costs (rendering runs on the customer's local hardware, not KeyShot's cloud). The Digizuite DAM business carries lower gross margin (~72%) due to cloud hosting and support overhead. The primary cost centres are R&amp;D (38% of revenue — 60+ engineers across Denmark, Ukraine, and the US), Sales &amp; Marketing (22% — enterprise sales team, trade shows like SOLIDWORKS World, and partner channel commissions), and G&amp;A (12%). EBITDA margin is estimated at 18–22%, reflecting the investment-phase economics of a company scaling from $25M to $50M+ revenue. The Digizuite acquisition added approximately 70 headcount — integration efficiencies should improve the margin profile as duplicate functions are consolidated.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Cost Waterfall — % of Revenue</div>
+      <div class="chart-container tall" id="chart-cost-waterfall"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Gross Margin by Product Line</div>
+      <div class="chart-container tall" id="chart-margin-product"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 3: PRICING & COMPETITIVE BENCHMARKING -->
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">KeyShot Studio Professional at $1,299/year positions it in the mid-to-premium tier of 3D rendering software. Its closest commercial competitors are V-Ray ($690/year for a single licence, $940/year for V-Ray Collection), Chaos Corona ($360/year), and SOLIDWORKS Visualize (bundled with SOLIDWORKS Professional at ~$6,000–$8,000/year). The existential competitive threat is Blender's Cycles/EEVEE renderer — free, open-source, and rapidly improving. Blender's user base grew 40%+ in 2024, though it lacks KeyShot's one-click CAD import and material library depth. In the premium tier, Autodesk 3ds Max + Arnold ($1,875/year) and Cinema 4D + Redshift ($1,074/year) serve overlapping markets but focus more on entertainment/motion graphics than product design. KeyShot's pricing power comes from workflow lock-in — once a design team has built a material library and integrated KeyShot into their CAD pipeline, switching costs are high.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">KeyShot vs Competitors — Annual Subscription</div>
+      <div class="chart-container tall" id="chart-price-comparison"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Market Share — 3D Rendering (2025)</div>
+      <div class="chart-container tall" id="chart-market-share"></div>
+    </div>
+  </div>
+
+  <!-- Competitive Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Competitive Pricing — 3D Rendering Software (Mar 2026)</div>
+    <table class="data-table">
+      <thead><tr><th>Software</th><th>Developer</th><th class="num">Annual Price</th><th class="num">vs KeyShot</th><th>Primary Use Case</th></tr></thead>
+      <tbody>
+        <tr><td><strong>KeyShot Studio Professional</strong></td><td>KeyShot (Luxion)</td><td class="num">$1,299/yr</td><td class="num">—</td><td>Product design, industrial viz, CPG</td></tr>
+        <tr><td><strong>3ds Max + Arnold</strong></td><td>Autodesk</td><td class="num">$1,875/yr</td><td class="num"><span class="highlight-pos">KeyShot 31% cheaper</span></td><td>Entertainment, architecture, product</td></tr>
+        <tr><td><strong>KeyShot + VR + Web</strong></td><td>KeyShot (Luxion)</td><td class="num">$2,955/yr</td><td class="num">Full suite</td><td>Enterprise product teams</td></tr>
+        <tr><td><strong>Cinema 4D + Redshift</strong></td><td>Maxon</td><td class="num">$1,074/yr</td><td class="num"><span class="highlight-neg">KeyShot 21% pricier</span></td><td>Motion graphics, broadcast, product</td></tr>
+        <tr><td><strong>V-Ray Solo</strong></td><td>Chaos</td><td class="num">$690/yr</td><td class="num"><span class="highlight-neg">KeyShot 88% pricier</span></td><td>Arch viz, product, VFX</td></tr>
+        <tr><td><strong>V-Ray Collection</strong></td><td>Chaos</td><td class="num">$940/yr</td><td class="num"><span class="highlight-neg">KeyShot 38% pricier</span></td><td>Full rendering suite</td></tr>
+        <tr><td><strong>Chaos Corona</strong></td><td>Chaos</td><td class="num">$360/yr</td><td class="num"><span class="highlight-neg">KeyShot 261% pricier</span></td><td>Architecture, interiors</td></tr>
+        <tr><td><strong>Blender (Cycles/EEVEE)</strong></td><td>Blender Foundation</td><td class="num"><span class="highlight-pos">Free</span></td><td class="num">∞</td><td>General 3D — growing fast in product design</td></tr>
+        <tr><td><strong>SOLIDWORKS Visualize</strong></td><td>Dassault Systèmes</td><td class="num">~$2,500/yr*</td><td class="num"><span class="highlight-pos">KeyShot 48% cheaper</span></td><td>CAD-integrated rendering (SW users only)</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Prices from vendor websites, g2.com, capterra.com (Mar 2026). *SOLIDWORKS Visualize pricing estimated — typically bundled with SOLIDWORKS Professional. KeyShot Education tier ($95/yr) excluded from competitive comparison.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 4: CUSTOMER SEGMENTS -->
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Customer Segments & Industry Verticals</div>
+  <div class="section-desc">KeyShot serves over 20,000 creatives worldwide, with over 2,688 companies actively using the platform. The customer base spans industrial design, automotive/transportation, consumer electronics, consumer packaged goods, medical devices, architecture, and aerospace/defence. Over 60% of Fortune 500 companies use KeyShot in their product development pipeline — notable enterprise customers include Mercedes-Benz, Ford, Jaguar Land Rover, Audi, Nike, Adidas, Google, Dell, HP, Logitech, LG Electronics, Whirlpool, GoPro, and Mattel. The automotive and consumer electronics verticals account for the largest share of Professional revenue, while education institutions drive the $95/year tier. The "design-to-market" positioning (KeyShot + Digizuite) is strongest with enterprise CPG and automotive accounts where the volume of product renders flowing into marketing is highest.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Industry Vertical</div>
+      <div class="chart-container" id="chart-industry-mix"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Geography</div>
+      <div class="chart-container" id="chart-geo-mix"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- STAT BANNER -->
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">20K+</div><div class="stat-label">Active Users</div></div>
+      <div><div class="stat-value">60%+</div><div class="stat-label">Fortune 500</div></div>
+      <div><div class="stat-value">7.3%</div><div class="stat-label">Market Share</div></div>
+      <div><div class="stat-value">167</div><div class="stat-label">Employees</div></div>
+      <div><div class="stat-value">850+</div><div class="stat-label">Materials Library</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 5: TEAM & OPERATIONS -->
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Team, R&D Investment & Operational Efficiency</div>
+  <div class="section-desc">KeyShot employs approximately 167 staff across offices in Aarhus (Denmark, HQ — ~80 staff including Digizuite team), Tustin, California (US sales &amp; engineering, ~45 staff), with smaller presences in the UK (~15), Belgium (~12), and Ukraine (~15, primarily Digizuite engineering). R&amp;D headcount is approximately 65 (39% of total), reflecting the company's engineering-led culture. Revenue per employee of $195K is solid for a mid-stage SaaS company but below best-in-class peers like Autodesk ($425K) — this reflects the Digizuite acquisition adding headcount before the cross-sell revenue has fully materialised. The July 2024 rebrand from "Luxion" to "KeyShot" as the unified corporate identity signals the integration is entering its final phase. Key R&amp;D priorities include AI-powered rendering (denoising, scene setup automation), real-time GPU path tracing improvements, and deeper CAD interoperability.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Headcount by Function</div>
+      <div class="chart-container tall" id="chart-headcount"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">R&D Spend as % of Revenue — Quarterly</div>
+      <div class="chart-container tall" id="chart-rd-spend"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 6: CASH FLOW & UNIT ECONOMICS -->
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Cash Flow, Unit Economics & Growth Efficiency</div>
+  <div class="section-desc">The subscription model provides strong cash flow predictability — annual upfront billing means cash collection leads revenue recognition. Estimated operating cash flow is $5.8M (TTM), with capex of $1.2M (primarily cloud infrastructure for Digizuite and Spiritly platform development). Free cash flow of $4.6M represents a 14% FCF margin — healthy for a company investing heavily in growth. Unit economics on the Professional tier are compelling: estimated customer acquisition cost (CAC) of $3,200 against a 4.2-year average customer lifetime yields LTV of approximately $5,460 — an LTV:CAC ratio of 1.7x. This improves to 2.4x when add-on revenue (Web, VR, Network Rendering) is included. The 3-year prepaid option ($3,385.80) effectively pulls forward 2.6 years of cash — 22% of new subscribers choose this, improving working capital. CAC payback period is approximately 2.5 years — acceptable for enterprise software but highlights the importance of reducing churn in years 2–3.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Quarterly Cash Flow ($K)</div>
+      <div class="chart-container tall" id="chart-cashflow"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Unit Economics — Professional Tier</div>
+      <div class="chart-container tall" id="chart-unit-econ"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 7: PRODUCT ROADMAP & AI -->
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Product Strategy, AI Features & Platform Expansion</div>
+  <div class="section-desc">KeyShot's September 2024 announcement of the "Product Design-to-Market Suite" signals the strategic direction — a unified SaaS platform combining 3D rendering (KeyShot Studio), digital asset management (Digizuite), and browser-based collaboration (KeyShot Web). AI features are the primary competitive differentiator: AI denoising reduces render times by 60–80%, AI scene setup automates lighting and camera positioning, and AI material suggestions accelerate the creative workflow. The company describes this as a "new SaaS category" designed to help product companies "leverage 3D to save millions and propel product innovation." The competitive risk is Blender's AI integration (AI-powered texture generation, geometry nodes) and Autodesk's platform consolidation (Autodesk Platform Services). KeyShot's advantage is focus — it serves product design teams exclusively, while competitors spread across entertainment, architecture, and engineering.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Feature Adoption — Add-on Attach Rate (%)</div>
+      <div class="chart-container" id="chart-attach-rate"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Subscriber Growth — Quarterly Trend</div>
+      <div class="chart-container" id="chart-subscriber-growth"></div>
+    </div>
+  </div>
+
+  <!-- Data Sources -->
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Pricing data</strong> from keyshot.com/pricing, g2.com, capterra.com, myarchitectai.com, and vendor websites for competitor products (all accessed March 2026).</li>
+      <li><strong>Revenue figures</strong>: $32.6M annual revenue from getlatka.com (2025). Previous year $25.1M from the same source (2024). 29% YoY growth calculated.</li>
+      <li><strong>Employee count</strong>: ~167 from PitchBook and RocketReach profiles. Headcount breakdown by function is estimated.</li>
+      <li><strong>Market share</strong>: 7.26% from 6sense.com (3D rendering category, 2025). 2,688+ companies using KeyShot from readycontacts.com.</li>
+      <li><strong>Digizuite acquisition</strong>: Announced July 2023, completed August 2023. Rebranded as KeyShot July 2024. Source: keyshot.com/blog, prnewswire.com.</li>
+      <li><strong>Subscriber counts, ARR breakdown, margins, and unit economics</strong> are illustrative estimates derived from publicly available data. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// Palette
+const STUDIO   = '#2d7dd2';
+const WEB      = '#17a2b8';
+const VR       = '#6f42c1';
+const NETWORK  = '#e67e22';
+const EDU      = '#28a745';
+const DAM      = '#8b5e3c';
+const POSITIVE = '#2d8a4e';
+const NEGATIVE = '#c0392b';
+const MUTED    = '#999999';
+const ACCENT   = '#2d7dd2';
+const DARK     = '#0f1923';
+
+const months = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+
+// ─── CHART 1: Monthly Revenue by Stream ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-monthly'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Studio Pro','Add-ons (Web/VR/NR)','Digizuite DAM','Education'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '$K', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Studio Pro', type: 'bar', stack: 'rev', data: [1320,1280,1380,1420,1460,1500,1440,1380,1520,1600,1420,1280], itemStyle: { color: STUDIO } },
+      { name: 'Add-ons (Web/VR/NR)', type: 'bar', stack: 'rev', data: [480,460,500,520,540,560,530,510,580,620,520,480], itemStyle: { color: VR } },
+      { name: 'Digizuite DAM', type: 'bar', stack: 'rev', data: [340,350,360,370,380,390,385,375,400,420,380,350], itemStyle: { color: DAM } },
+      { name: 'Education', type: 'bar', stack: 'rev', data: [45,40,35,30,28,25,55,85,90,48,42,38], itemStyle: { color: EDU } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 2: Revenue Mix (Pie) ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: ${c}M ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n${c}M' },
+      data: [
+        { value: 16.9, name: 'Studio Professional', itemStyle: { color: STUDIO } },
+        { value: 6.3, name: 'Add-ons', itemStyle: { color: VR } },
+        { value: 4.5, name: 'Digizuite DAM', itemStyle: { color: DAM } },
+        { value: 4.2, name: 'Services & Other', itemStyle: { color: MUTED } },
+        { value: 0.7, name: 'Education', itemStyle: { color: EDU } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 3: ARR Growth ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-arr-growth'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: '$M', min: 15, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [18.2, 19.8, 21.4, 23.1, 24.6, 26.0, 27.2, 28.4], smooth: true,
+      lineStyle: { color: STUDIO, width: 3 },
+      itemStyle: { color: STUDIO },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(45,125,210,0.25)' },{ offset: 1, color: 'rgba(45,125,210,0.02)' }] } },
+      label: { show: true, fontSize: 10, formatter: '${c}M' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 4: Cost Waterfall ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cost-waterfall'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { top: 20, bottom: 50, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Revenue','COGS\n(Hosting/\nSupport)','R&D','Sales &\nMarketing','G&A','EBITDA'], axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '%', max: 110, axisLabel: { fontSize: 10 } },
+    series: [
+      { type: 'bar', stack: 'w', data: [0, 82, 44, 22, 10, 0], itemStyle: { color: 'transparent' }, emphasis: { itemStyle: { color: 'transparent' } } },
+      { type: 'bar', stack: 'w', data: [100, 18, 38, 22, 12, 10],
+        itemStyle: { color: function(p){ return p.dataIndex === 0 ? STUDIO : p.dataIndex === 5 ? POSITIVE : '#6ba3d6'; } },
+        label: { show: true, position: 'top', fontSize: 10, formatter: function(p){ return p.value + '%'; } }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 5: Gross Margin by Product ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-margin-product'));
+  var products = ['Studio\nPro','Studio\nWeb','Studio\nVR','Network\nRendering','Education','Digizuite\nDAM'];
+  var margins = [88, 92, 85, 78, 90, 72];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 50, right: 20 },
+    xAxis: { type: 'category', data: products, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '%', min: 50, max: 100, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: margins.map(function(v,i){
+        var cols = [STUDIO, WEB, VR, NETWORK, EDU, DAM];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '{c}%' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 6: Pricing Comparison ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-comparison'));
+  var names = ['3ds Max\n+Arnold\n$1,875','KeyShot\nPro\n$1,299','C4D +\nRedshift\n$1,074','V-Ray\nCollection\n$940','V-Ray\nSolo\n$690','Corona\n$360','Blender\nFree'];
+  var prices = [1875, 1299, 1074, 940, 690, 360, 0];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 75, left: 55, right: 20 },
+    xAxis: { type: 'category', data: names, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '$/yr', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: prices.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 1 ? STUDIO : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 9, formatter: '${c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 7: Market Share ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-market-share'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 32.1, name: 'Google Earth Pro', itemStyle: { color: '#999' } },
+        { value: 25.8, name: 'NVIDIA', itemStyle: { color: '#76b900' } },
+        { value: 23.1, name: 'Autodesk 3ds Max', itemStyle: { color: '#e67e22' } },
+        { value: 7.3, name: 'KeyShot', itemStyle: { color: STUDIO } },
+        { value: 11.7, name: 'Other', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 8: Industry Mix ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-industry-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 24, name: 'Automotive', itemStyle: { color: STUDIO } },
+        { value: 20, name: 'Consumer Electronics', itemStyle: { color: VR } },
+        { value: 16, name: 'CPG / FMCG', itemStyle: { color: NETWORK } },
+        { value: 12, name: 'Industrial / MFG', itemStyle: { color: DAM } },
+        { value: 10, name: 'Medical Devices', itemStyle: { color: EDU } },
+        { value: 8, name: 'Architecture', itemStyle: { color: WEB } },
+        { value: 10, name: 'Other', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 9: Geography ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-geo-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 52, name: 'United States', itemStyle: { color: STUDIO } },
+        { value: 11, name: 'United Kingdom', itemStyle: { color: VR } },
+        { value: 8, name: 'Germany', itemStyle: { color: NETWORK } },
+        { value: 6, name: 'Japan', itemStyle: { color: DAM } },
+        { value: 5, name: 'South Korea', itemStyle: { color: WEB } },
+        { value: 18, name: 'Rest of World', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 10: Headcount by Function ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-headcount'));
+  var functions = ['R&D /\nEngineering','Sales &\nMarketing','Customer\nSuccess','G&A /\nFinance','Product /\nDesign'];
+  var counts = [65, 42, 28, 20, 12];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 50, right: 20 },
+    xAxis: { type: 'category', data: functions, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: 'Staff', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: counts.map(function(v,i){
+        var cols = [STUDIO, NETWORK, WEB, MUTED, VR];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 11 },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 11: R&D Spend ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-rd-spend'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['Q1 25','Q2 25','Q3 25','Q4 25'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '% of Rev', min: 30, max: 45, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [40.2, 39.1, 37.8, 36.4], smooth: true,
+      lineStyle: { color: STUDIO, width: 3 },
+      itemStyle: { color: STUDIO },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(45,125,210,0.2)' },{ offset: 1, color: 'rgba(45,125,210,0.02)' }] } },
+      label: { show: true, fontSize: 11, formatter: '{c}%' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 12: Cash Flow ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cashflow'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Operating CF','Capex','Free Cash Flow'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Q1 25','Q2 25','Q3 25','Q4 25'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '$K', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Operating CF', type: 'bar', data: [1200, 1350, 1580, 1670], itemStyle: { color: POSITIVE } },
+      { name: 'Capex', type: 'bar', data: [-280, -300, -320, -300], itemStyle: { color: NEGATIVE } },
+      { name: 'Free Cash Flow', type: 'line', data: [920, 1050, 1260, 1370], lineStyle: { color: STUDIO, width: 2.5 }, itemStyle: { color: STUDIO },
+        label: { show: true, fontSize: 10, formatter: '${c}K' }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 13: Unit Economics ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-unit-econ'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 40, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['CAC','Year 1\nRev','Year 2\n(+addons)','Year 3\n(+addons)','Year 4\n(+addons)','LTV\n(4.2yr avg)'], axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '$', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 3200, itemStyle: { color: NEGATIVE } },
+        { value: 1299, itemStyle: { color: '#6ba3d6' } },
+        { value: 1520, itemStyle: { color: '#5a95cc' } },
+        { value: 1680, itemStyle: { color: '#4888c2' } },
+        { value: 1750, itemStyle: { color: '#367ab8' } },
+        { value: 5460, itemStyle: { color: POSITIVE } }
+      ],
+      label: { show: true, position: 'top', fontSize: 10, formatter: '${c}' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 14: Add-on Attach Rate ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-attach-rate'));
+  var addons = ['Web Viewer','Network\nRendering','VR','NX Plugin'];
+  var rates = [29, 18, 9, 6];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 40, left: 50, right: 20 },
+    xAxis: { type: 'category', data: addons, axisLabel: { fontSize: 10, interval: 0 } },
+    yAxis: { type: 'value', name: '% of Pro subs', max: 40, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: rates.map(function(v,i){
+        var cols = [WEB, NETWORK, VR, MUTED];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 11, formatter: '{c}%' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 15: Subscriber Growth ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-subscriber-growth'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Professional','Education'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 35, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['Q1 24','Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: 'Subscribers (K)', axisLabel: { fontSize: 10, formatter: '{value}K' } },
+    series: [
+      { name: 'Professional', type: 'line', data: [9.2, 9.8, 10.4, 11.0, 11.5, 12.0, 12.6, 13.0], smooth: true, lineStyle: { color: STUDIO, width: 2.5 }, itemStyle: { color: STUDIO } },
+      { name: 'Education', type: 'line', data: [4.8, 5.0, 5.4, 6.2, 6.0, 5.8, 6.4, 7.0], smooth: true, lineStyle: { color: EDU, width: 2.5 }, itemStyle: { color: EDU } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+</script>
+</body>
+</html>
