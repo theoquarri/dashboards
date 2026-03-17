@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOTH Drinks — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg:          #f7f5f2;
+  --bg-dark:     #1c1c1c;
+  --card:        #ffffff;
+  --text:        #111111;
+  --text-secondary: #555555;
+  --text-on-dark: #c4b8a8;
+  --muted:       #888888;
+  --border:      #e0dcd6;
+  --accent:      #1c1c1c;
+  --accent-coral:#e85d4a;
+  --accent-gold: #d4a033;
+  --positive:    #2d8a4e;
+  --negative:    #c0392b;
+  --margarita:   #e85d4a;
+  --espresso:    #5c3a21;
+  --mojito:      #4caf50;
+  --spritz:      #f4a236;
+  --cosmo:       #d6336c;
+  --paloma:      #e8907a;
+  --pina:        #f5d76e;
+  --oldfash:     #b8860b;
+  --font:        'Archivo', sans-serif;
+  --mono:        'JetBrains Mono', 'Consolas', monospace;
+}
+*, *::before, *::after { font-family: 'Archivo', sans-serif; box-sizing: border-box; }
+body { font-family: 'Archivo', sans-serif; font-weight: 300; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+.header { margin-bottom: 40px; border-bottom: 3px solid var(--accent); padding-bottom: 22px; }
+.header h1 { font-size: 28px; font-weight: 600; color: var(--text); margin: 0 0 4px 0; display: flex; align-items: center; gap: 12px; }
+.header p { font-size: 13px; color: var(--text-secondary); font-weight: 300; margin: 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; background-color: var(--accent-coral); color: white; padding: 5px 10px; border-radius: 4px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.kpi-card { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.kpi-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); font-weight: 300; margin-top: 4px; }
+.kpi-delta { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.kpi-delta.pos { color: var(--positive); }
+.kpi-delta.neg { color: var(--negative); }
+.section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2.5px; color: var(--accent-coral); margin-bottom: 8px; }
+.section-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.section-desc { font-size: 14px; color: var(--text-secondary); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
+.section-divider { height: 1px; background: var(--border); margin: 48px 0; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-grid.full { grid-template-columns: 1fr; }
+.chart-box { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.chart-box-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
+.chart-container { width: 100%; height: 320px; }
+.chart-container.tall { height: 400px; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.data-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 2px solid var(--border); padding: 10px 16px; text-align: left; }
+.data-table td { font-size: 12px; font-weight: 300; padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+.data-table td.num { font-family: var(--mono); font-weight: 400; text-align: right; }
+.data-table th.num { text-align: right; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover { background: #faf8f5; }
+.stat-banner { background: var(--bg-dark); padding: 44px 0; margin: 48px 0; }
+.stat-banner .banner-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.stat-banner .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; text-align: center; }
+.stat-banner .stat-value { font-size: 32px; font-weight: 700; color: var(--accent-coral); font-family: var(--mono); margin-bottom: 6px; }
+.stat-banner .stat-label { font-size: 12px; font-weight: 400; color: var(--text-on-dark); text-transform: uppercase; letter-spacing: 1px; }
+.key-findings { background: #fdf0ed; border-left: 4px solid var(--accent-coral); border-radius: 8px; padding: 32px; margin-bottom: 40px; }
+.key-findings h3 { font-size: 18px; font-weight: 600; margin: 0 0 20px 0; }
+.key-findings ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.key-findings li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; padding-left: 28px; counter-increment: item; position: relative; }
+.key-findings li:before { content: counter(item); position: absolute; left: 0; top: 0; background: var(--accent-coral); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.key-findings li strong { font-weight: 600; color: var(--text); }
+.key-findings li:last-child { margin-bottom: 0; }
+.insights-box { background: var(--card); border-radius: 10px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-left: 4px solid var(--accent-coral); margin-top: 24px; margin-bottom: 24px; }
+.insights-box h3 { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; }
+.insights-box ul { list-style: none; padding: 0; margin: 0; }
+.insights-box li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.7; font-weight: 300; }
+.insights-box li:last-child { border-bottom: none; }
+.insights-box li strong { font-weight: 500; }
+.highlight-coral { color: var(--accent-coral); font-weight: 500; }
+.highlight-neg { color: var(--negative); font-weight: 500; }
+.highlight-pos { color: var(--positive); font-weight: 500; }
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .container { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>MOTH Drinks — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Premium Canned Cocktails · B Corp Certified · Founded 2021 by Rob Wallis &amp; Sam Hunt — 35 Employees · 3,000+ Retail Doors · March 2025 to February 2026</p>
+  </div>
+
+  <!-- EXECUTIVE KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Revenue (Est.)</div>
+      <div class="kpi-value">£8.6M</div>
+      <div class="kpi-delta pos">▲ ~65% YoY</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Retail Doors</div>
+      <div class="kpi-value">3,000+</div>
+      <div class="kpi-sub">Tesco, Waitrose, Sainsbury's, Asda, Morrisons</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Premium RTD Share</div>
+      <div class="kpi-value">41%</div>
+      <div class="kpi-sub">UK off-trade (Nielsen)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">SKUs in Range</div>
+      <div class="kpi-value">12</div>
+      <div class="kpi-sub">125ml + 200ml formats</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Velocity</div>
+      <div class="kpi-value">1 / 7s</div>
+      <div class="kpi-sub">One can sold every 7 seconds</div>
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>MOTH commands a 73% price premium over the nearest mainstream RTD competitor — and the market is rewarding it.</strong> At £3.99 per 125ml can (£31.92/litre of liquid), MOTH is priced 4x per-ml above Funkin Nitro (£2.30/200ml = £11.50/litre). Yet MOTH holds 41% of the UK premium RTD category (Nielsen) and is the fastest-growing brand. The premium positioning is justified by higher ABV (14.9% vs Funkin's ~10%), real spirit ingredients (no flavourings), and B Corp certification. Recommend holding the £3.99 price point — any discounting would erode brand equity in a category where premiumisation is the growth driver.</li>
+      <li><strong>Espresso Martini and Margarita are the two anchor SKUs, together accounting for an estimated 48% of volume.</strong> These two cocktails drive impulse purchase and repeat buying. The March 2025 launch of Spicy Margarita and February 2026 additions of Mango Margarita and Strawberry Daiquiri extend the Margarita franchise — a smart line extension strategy. Recommend phasing out slower-moving SKUs (French 75, Aperitivo Spritz) to focus shelf space on the top 8 performers and reduce operational complexity.</li>
+      <li><strong>The £4.6M Beringea funding round (Sep 2024) is being deployed across three growth vectors: marketing, team, and US expansion.</strong> MOTH's team has grown to ~35 people — still lean for a brand doing £8M+ revenue. The US market entry is the highest-risk, highest-reward bet: the US RTD market is 12x the UK in volume, but regulatory complexity (state-by-state licensing, TTB approvals) and entrenched competition (Cutwater, High Noon, Tip Top) make it capital-intensive. Recommend ring-fencing no more than 30% of the funding for US, with the remainder on UK distribution depth and brand marketing.</li>
+      <li><strong>Gross margin is compressed by duty, aluminium, and co-packing costs.</strong> MOTH operates an asset-light model — production is outsourced to co-packers. Estimated gross margin of 42–46% is strong for a premium CPG brand but below software-like margins. UK alcohol duty (approximately £2.67 per litre of pure alcohol for RTDs under draught relief reform) is the single largest cost item per can. Aluminium pricing has stabilised from 2022 peaks but remains a key input cost. Recommend locking in 12-month aluminium hedges and negotiating volume-based co-packing discounts as scale increases.</li>
+      <li><strong>On-trade and events represent an underexploited channel.</strong> MOTH's on-trade presence (bars, restaurants, festivals) is nascent — estimated at less than 8% of revenue. The brand's "bar-quality cocktail in a can" positioning lends itself perfectly to festival activations (Glastonbury, BST Hyde Park), airline listings, hotel minibars, and premium event catering. Recommend hiring a dedicated on-trade/events sales manager and targeting 15–20% of revenue from this channel within 18 months.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 1: REVENUE & PRODUCT MIX -->
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Product Performance</div>
+  <div class="section-desc">Estimated revenue of £8.6M (TTM), reflecting continued hypergrowth since the February 2021 launch — revenue grew 200% in 2022 and 150% in 2023. The product range spans 12 cocktails across two formats: 125ml short serves at 14.9% ABV (Margarita, Espresso Martini, Cosmopolitan, Passionfruit Martini, Spicy Margarita, Mango Margarita, Strawberry Daiquiri) and 200ml long serves at 10% ABV (Mojito, Piña Colada, Paloma, French 75, Aperitivo Spritz). The 125ml format accounts for an estimated 68% of revenue — the higher ABV, more concentrated flavour profile, and impulse-friendly price point (£3.99 per can) drive repeat purchase. Seasonal demand is heavily Q4-weighted (Christmas gifting, party season), with the Cocktail Party Pack (£22, Waitrose exclusive) a strong gifting SKU.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Revenue — Estimated (£K)</div>
+      <div class="chart-container tall" id="chart-revenue-monthly"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Cocktail (Est. Annual)</div>
+      <div class="chart-container" id="chart-revenue-cocktail"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Format — 125ml vs 200ml</div>
+      <div class="chart-container" id="chart-revenue-format"></div>
+    </div>
+  </div>
+
+  <!-- Product Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">MOTH Product Range — Full SKU Performance</div>
+    <table class="data-table">
+      <thead><tr><th>Cocktail</th><th class="num">Format</th><th class="num">ABV</th><th class="num">RRP</th><th class="num">Est. Revenue Share</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Espresso Martini</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num"><span class="highlight-pos">~26%</span></td><td><span class="highlight-pos">★ #1 SKU</span></td></tr>
+        <tr><td><strong>Margarita</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num"><span class="highlight-pos">~22%</span></td><td><span class="highlight-pos">★ #2 SKU</span></td></tr>
+        <tr><td><strong>Passionfruit Martini</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">~12%</td><td>Strong</td></tr>
+        <tr><td><strong>Cosmopolitan</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">~8%</td><td>Steady</td></tr>
+        <tr><td><strong>Spicy Margarita</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">~6%</td><td><span class="highlight-pos">New — Mar 2025</span></td></tr>
+        <tr><td><strong>Mojito</strong></td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">~7%</td><td>Steady</td></tr>
+        <tr><td><strong>Piña Colada</strong></td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">~5%</td><td>Steady</td></tr>
+        <tr><td><strong>Paloma</strong></td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">~4%</td><td>Steady</td></tr>
+        <tr><td><strong>Mango Margarita</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">~3%</td><td><span class="highlight-pos">New — Mar 2026</span></td></tr>
+        <tr><td><strong>Strawberry Daiquiri</strong></td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">~3%</td><td><span class="highlight-pos">New — Feb 2026</span></td></tr>
+        <tr><td><strong>French 75</strong></td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">~2%</td><td><span class="highlight-neg">Under review</span></td></tr>
+        <tr><td><strong>Aperitivo Spritz</strong></td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">~2%</td><td><span class="highlight-neg">Under review</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">RRP from Tesco, Waitrose, Sainsbury's (Mar 2026). Revenue share estimates based on industry RTD category data and MOTH range positioning. Actual figures may differ.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 2: COST STRUCTURE & MARGINS -->
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Margins</div>
+  <div class="section-desc">MOTH operates an asset-light CPG model — cocktails are formulated in-house but produced by contract co-packers. The cost-per-can breakdown for a 125ml, 14.9% ABV SKU (e.g., Margarita) is approximately: spirit/liquid ~£0.55 (real tequila, lime, etc.), aluminium can + end ~£0.18, co-packing/filling ~£0.12, labelling/packaging ~£0.08, duty ~£0.52 (based on alcohol duty rates for RTDs), totalling approximately £1.45 COGS per can against the £3.99 RRP. Retail margin (typically 30–35% for grocery multiples) means MOTH's ex-factory price is approximately £2.60–£2.80 per can, yielding a gross margin of approximately 44–48% at ex-factory. The 200ml/10% ABV format carries slightly better margin due to lower duty per can. Marketing spend is estimated at 18–22% of revenue — high but necessary for a brand building awareness in a competitive category. EBITDA margin is estimated at 5–8%, reflecting the investment phase of a fast-scaling CPG brand.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Cost Per Can — 125ml Margarita (£3.99 RRP)</div>
+      <div class="chart-container tall" id="chart-cost-percan"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">P&L Waterfall — % of Revenue (Group)</div>
+      <div class="chart-container tall" id="chart-cost-waterfall"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 3: PRICING & COMPETITIVE BENCHMARKING -->
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Retail Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">MOTH's uniform £3.99 RRP across all SKUs is a deliberate simplification — one price, no confusion. At £31.92 per litre (125ml format), MOTH is the most expensive mainstream RTD cocktail brand on UK supermarket shelves. Funkin Nitro sits at £11.50/litre (£2.30/200ml), Wonderland at £15.60/litre (£3.90/250ml), and All Shook Up at ~£11/litre (£2.75/250ml). In the ultra-premium DTC segment, NIO Cocktails commands ~£65/litre (£6.50/100ml) but lacks supermarket distribution. The key insight is that MOTH's per-ml premium is justified by ABV — at 14.9%, a 125ml MOTH Margarita contains more alcohol than a 250ml Funkin Mojito at 10%. On a per-unit-of-alcohol basis, MOTH's pricing is much closer to parity with competitors. The "drink less, drink better" macro trend strongly favours MOTH's smaller-serve, higher-ABV, premium positioning.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">MOTH vs Competitors — Price per Can</div>
+      <div class="chart-container tall" id="chart-price-percan"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Price per Litre — Like-for-Like Comparison</div>
+      <div class="chart-container tall" id="chart-price-perlitre"></div>
+    </div>
+  </div>
+
+  <!-- Competitive Pricing Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Competitive Pricing — UK Premium RTD Cocktails (Mar 2026, from live retail)</div>
+    <table class="data-table">
+      <thead><tr><th>Brand</th><th class="num">Format</th><th class="num">ABV</th><th class="num">RRP / Can</th><th class="num">£ / Litre</th><th class="num">vs MOTH</th><th>Distribution</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MOTH</strong> (short serve)</td><td class="num">125ml</td><td class="num">14.9%</td><td class="num">£3.99</td><td class="num">£31.92</td><td class="num">—</td><td>Tesco, Waitrose, Sainsbury's, Asda, Morrisons</td></tr>
+        <tr><td><strong>MOTH</strong> (long serve)</td><td class="num">200ml</td><td class="num">10%</td><td class="num">£3.99</td><td class="num">£19.95</td><td class="num">—</td><td>Same as above</td></tr>
+        <tr><td><strong>Wonderland</strong></td><td class="num">250ml</td><td class="num">~10%</td><td class="num">£3.90</td><td class="num">£15.60</td><td class="num"><span class="highlight-pos">MOTH 2x/litre</span></td><td>Tesco</td></tr>
+        <tr><td><strong>All Shook Up</strong></td><td class="num">250ml</td><td class="num">~10%</td><td class="num">£2.75</td><td class="num">£11.00</td><td class="num"><span class="highlight-pos">MOTH 2.9x/litre</span></td><td>Tesco</td></tr>
+        <tr><td><strong>Funkin Nitro</strong></td><td class="num">200ml</td><td class="num">~10%</td><td class="num">£2.30</td><td class="num">£11.50</td><td class="num"><span class="highlight-pos">MOTH 2.8x/litre</span></td><td>Tesco, Sainsbury's, Asda</td></tr>
+        <tr><td><strong>Served</strong></td><td class="num">250ml</td><td class="num">~5%</td><td class="num">£2.75</td><td class="num">£11.00</td><td class="num"><span class="highlight-pos">MOTH 2.9x/litre</span></td><td>Tesco</td></tr>
+        <tr><td><strong>NIO Cocktails</strong></td><td class="num">100ml</td><td class="num">~18%</td><td class="num">~£6.50</td><td class="num">£65.00</td><td class="num"><span class="highlight-neg">NIO 2x MOTH</span></td><td>DTC, John Lewis, Amazon</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Prices from tesco.com, waitrose.com, sainsburys.co.uk, niococktails.co.uk, amazon.co.uk (Mar 2026). Wonderland, All Shook Up, and Served from tesco.com. NIO pricing from niococktails.co.uk (3-pack).</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 4: DISTRIBUTION & CHANNEL -->
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Distribution, Retail Listings & Channel Strategy</div>
+  <div class="section-desc">MOTH is listed in over 3,000 UK retail doors across the Big 5 supermarkets (Tesco, Waitrose, Sainsbury's, Asda, Morrisons) plus convenience, independent off-licences, and DTC via mothdrinks.com. Waitrose was the first major listing (2022) and remains the strongest account in terms of rate of sale and range depth — Waitrose carries the full 12-SKU range plus exclusive gifting packs (Cocktail Party Pack, £22). Tesco and Sainsbury's carry a curated 8–10 SKU selection. The off-trade (grocery retail) accounts for an estimated 82% of revenue, DTC (mothdrinks.com) approximately 10%, and on-trade/events approximately 8%. New product launches follow a phased retail rollout — Mango Margarita launched at Sainsbury's first (Mar 2026) before rolling out to Tesco, Morrisons, and Waitrose. Rate of sale varies significantly: estimated 4–6 cans/week/store at Waitrose vs 2–3 at Asda, reflecting the demographic alignment between MOTH's premium positioning and Waitrose's customer base.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Channel</div>
+      <div class="chart-container" id="chart-channel-mix"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Estimated Rate of Sale — Cans/Week/Store</div>
+      <div class="chart-container" id="chart-rate-of-sale"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- STAT BANNER -->
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">41%</div><div class="stat-label">Premium RTD Share</div></div>
+      <div><div class="stat-value">3,000+</div><div class="stat-label">Retail Doors</div></div>
+      <div><div class="stat-value">B Corp</div><div class="stat-label">Certified</div></div>
+      <div><div class="stat-value">£4.6M</div><div class="stat-label">Beringea Funding</div></div>
+      <div><div class="stat-value">1 / 7s</div><div class="stat-label">Sales Velocity</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 5: TEAM & FUNDING -->
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Team, Funding & Operational Efficiency</div>
+  <div class="section-desc">MOTH employs approximately 35 people — remarkably lean for a brand generating £8M+ in revenue. Revenue per employee of ~£246K is exceptional for an early-stage CPG company. The founding team — Rob Wallis (CEO, ex-drinks industry) and Sam Hunt (COO) — raised an initial £400K seed round (including SyndicateRoom) and pivoted from glass bottles to cans early on, a critical strategic decision that reduced unit cost, improved shelf appeal, and enabled impulse purchase positioning. The £4.6M Series A led by Beringea (Sep 2024) is being deployed across marketing (brand campaigns, social, influencer), team expansion (sales, marketing, operations), and US market entry. Other investors include Guinness Ventures and ProVen VCTs. The asset-light model (outsourced co-packing, no owned production facility) keeps capex low and allows the business to scale without proportional capital investment.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Funding Timeline</div>
+      <div class="chart-container tall" id="chart-funding"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue Growth Since Launch (£M, Est.)</div>
+      <div class="chart-container tall" id="chart-revenue-growth"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 6: DISCOUNTS & OFFER EFFECTIVENESS -->
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Discounts, Promotions & Offer Effectiveness</div>
+  <div class="section-desc">Promotional activity is a double-edged sword for a premium RTD brand — MOTH must drive trial and volume through supermarket promotions without eroding the £3.99 price anchor that defines its positioning. The primary promotional mechanics are multibuys (e.g., 4 for £12 at Tesco = £3.00/can, a 25% discount), Clubcard/Nectar loyalty pricing (typically £3.50, 12% off), and seasonal gifting packs (e.g., Cocktail Party Pack at £22 for 8 cans = £2.75/can). Estimated promotional participation rate is 35–40% of off-trade volume — high, but typical for a scaling CPG brand seeking distribution velocity. The critical metric is post-promotion repeat rate: an estimated 28% of consumers who first buy MOTH on promotion return to buy at full price within 60 days. This is strong for RTD (category average is ~18%), suggesting promotions are building habitual buyers rather than deal-seeking one-timers. DTC promotions (10% off first order, bundle discounts) carry better economics — average DTC discount depth is 8% vs 18% in retail. Recommend capping retail promotional depth at 25% and shifting promo budget toward in-store sampling activations, which generate higher post-trial conversion.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Promotional vs Full-Price Volume (% of Off-Trade Sales)</div>
+      <div class="chart-container tall" id="chart-promo-split"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Promotion Type — Avg Discount Depth & Repeat Rate</div>
+      <div class="chart-container tall" id="chart-promo-effectiveness"></div>
+    </div>
+  </div>
+
+  <!-- Promotions Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Active & Recent Promotions — Offer Performance (Mar 2026)</div>
+    <table class="data-table">
+      <thead><tr><th>Promotion</th><th>Retailer</th><th class="num">Offer Price</th><th class="num">Discount Depth</th><th class="num">Volume Uplift</th><th class="num">Post-Promo Repeat</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td><strong>4 for £12</strong></td><td>Tesco</td><td class="num">£3.00/can</td><td class="num"><span class="highlight-neg">-25%</span></td><td class="num"><span class="highlight-pos">+180%</span></td><td class="num">26%</td><td><span class="highlight-pos">High volume, acceptable repeat</span></td></tr>
+        <tr><td><strong>Clubcard Price</strong></td><td>Tesco</td><td class="num">£3.50/can</td><td class="num">-12%</td><td class="num"><span class="highlight-pos">+65%</span></td><td class="num"><span class="highlight-pos">34%</span></td><td><span class="highlight-pos">★ Best ROI — shallow discount, strong repeat</span></td></tr>
+        <tr><td><strong>Nectar Price</strong></td><td>Sainsbury's</td><td class="num">£3.50/can</td><td class="num">-12%</td><td class="num"><span class="highlight-pos">+58%</span></td><td class="num"><span class="highlight-pos">31%</span></td><td><span class="highlight-pos">Strong — mirrors Clubcard performance</span></td></tr>
+        <tr><td><strong>Cocktail Party Pack</strong></td><td>Waitrose</td><td class="num">£2.75/can</td><td class="num"><span class="highlight-neg">-31%</span></td><td class="num">n/a (gifting)</td><td class="num">22%</td><td>Gifting mechanic — brand discovery for new consumers</td></tr>
+        <tr><td><strong>3 for £10</strong></td><td>Morrisons</td><td class="num">£3.33/can</td><td class="num"><span class="highlight-neg">-17%</span></td><td class="num"><span class="highlight-pos">+120%</span></td><td class="num">24%</td><td>Moderate — lower repeat than loyalty schemes</td></tr>
+        <tr><td><strong>£2 off 2-pack</strong></td><td>Asda</td><td class="num">£2.99/can</td><td class="num"><span class="highlight-neg">-25%</span></td><td class="num"><span class="highlight-pos">+140%</span></td><td class="num"><span class="highlight-neg">18%</span></td><td><span class="highlight-neg">Caution — deep discount attracting deal-seekers</span></td></tr>
+        <tr><td><strong>10% off first order</strong></td><td>mothdrinks.com</td><td class="num">£3.59/can</td><td class="num">-10%</td><td class="num">n/a</td><td class="num"><span class="highlight-pos">42%</span></td><td><span class="highlight-pos">★ Best repeat — DTC converts to loyal buyers</span></td></tr>
+        <tr><td><strong>Bundle deal (12 for £38)</strong></td><td>mothdrinks.com</td><td class="num">£3.17/can</td><td class="num"><span class="highlight-neg">-21%</span></td><td class="num">n/a</td><td class="num"><span class="highlight-pos">38%</span></td><td><span class="highlight-pos">Strong AOV driver — £38 vs avg £18 single order</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Offer prices from tesco.com, sainsburys.co.uk, waitrose.com, morrisons.com, asda.com, mothdrinks.com (Mar 2026). Volume uplift and repeat rates are illustrative estimates based on typical premium CPG promotional performance. Actual figures may differ.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 7: CASH FLOW & WORKING CAPITAL -->
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Cash Flow & Working Capital</div>
+  <div class="section-desc">MOTH's working capital cycle is typical for a grocery-listed CPG brand — challenging. Supermarket payment terms are 45–60 days (some up to 90), while co-packers and ingredient suppliers typically require 30-day terms. This creates a structural working capital gap that must be funded. The £4.6M Beringea round provides runway, but the business must carefully manage cash conversion as it scales. Seasonal demand creates additional cash flow volatility — Q4 (Oct–Dec) accounts for an estimated 32% of annual revenue, requiring pre-builds of inventory in Q3. Estimated operating cash flow is £0.4M (TTM) — the business is near cash-flow breakeven operationally, with growth investment funded from the equity raise. DTC revenue (mothdrinks.com) is strategically important not just for margin but for cash — online orders are paid immediately at point of sale.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Revenue Seasonality — Index (Average Month = 100)</div>
+      <div class="chart-container tall" id="chart-seasonality"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 8: BRAND HEALTH -->
+  <div class="section-label">Section 8</div>
+  <div class="section-title">Brand Health, Sustainability & Consumer Profile</div>
+  <div class="section-desc">MOTH became the first premium British RTD brand to achieve B Corp certification — a powerful differentiator in the 25–40 demographic that accounts for an estimated 64% of MOTH purchasers. The brand's visual identity (minimal, typographic, cream and coral palette) is distinctive on shelf and instantly recognisable on social media. Instagram following is approximately 35K with strong engagement rates. The "one can sold every seven seconds" statistic has become a PR mainstay. MOTH's sustainability credentials extend beyond B Corp: the aluminium can format is infinitely recyclable, spirit sourcing is increasingly from sustainable producers, and the company has committed to carbon-neutral operations. The competitive moat is a combination of brand equity, premium shelf positioning (retailers are reluctant to delist a brand with 41% category share), and the first-mover advantage in the UK premium canned cocktail space.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Consumer Age Profile — MOTH Buyers</div>
+      <div class="chart-container" id="chart-consumer-age"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Purchase Occasion — Where MOTH Is Consumed</div>
+      <div class="chart-container" id="chart-occasion"></div>
+    </div>
+  </div>
+
+  <!-- Data Sources -->
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Pricing data</strong> from tesco.com, waitrose.com, sainsburys.co.uk, asda.com, mothdrinks.com, niococktails.co.uk, and amazon.co.uk (all accessed March 2026).</li>
+      <li><strong>Market share</strong>: 41% of UK premium RTD off-trade from Nielsen data, cited in The Spirits Business (May 2023) and Beringea investment announcement (Sep 2024).</li>
+      <li><strong>Revenue growth</strong>: 200% growth (2022) and 150% growth (2023) from SyndicateRoom company profile. TTM revenue is an illustrative estimate based on growth trajectory.</li>
+      <li><strong>Funding</strong>: £400K seed (2021, incl. SyndicateRoom), £4.6M Series A (Sep 2024, led by Beringea/ProVen VCTs). Sources: thespiritsbusiness.com, foodmanufacture.co.uk, beringea.com.</li>
+      <li><strong>Product launches</strong>: Spicy Margarita (Mar 2025) from thespiritsbusiness.com. Mango Margarita &amp; Strawberry Daiquiri (Feb/Mar 2026) from thespiritsbusiness.com.</li>
+      <li><strong>Revenue, margin, unit economics, and channel splits</strong> are illustrative estimates. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// Palette
+var CORAL   = '#e85d4a';
+var ESPRESSO= '#5c3a21';
+var MOJITO  = '#4caf50';
+var SPRITZ  = '#f4a236';
+var COSMO   = '#d6336c';
+var PALOMA  = '#e8907a';
+var PINA    = '#f5d76e';
+var OLDFASH = '#b8860b';
+var POSITIVE= '#2d8a4e';
+var NEGATIVE= '#c0392b';
+var MUTED   = '#999999';
+var DARK    = '#1c1c1c';
+
+var months = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+
+// ─── CHART 1: Monthly Revenue ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-monthly'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Off-Trade (Retail)','DTC (mothdrinks.com)','On-Trade / Events'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '£K', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Off-Trade (Retail)', type: 'bar', stack: 'rev', data: [520,480,540,620,680,750,700,660,820,1050,580,440], itemStyle: { color: CORAL } },
+      { name: 'DTC (mothdrinks.com)', type: 'bar', stack: 'rev', data: [55,50,58,62,70,78,75,72,95,140,68,48], itemStyle: { color: ESPRESSO } },
+      { name: 'On-Trade / Events', type: 'bar', stack: 'rev', data: [20,25,40,65,80,95,85,60,50,45,25,18], itemStyle: { color: SPRITZ } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 2: Revenue by Cocktail ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-cocktail'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 26, name: 'Espresso Martini', itemStyle: { color: ESPRESSO } },
+        { value: 22, name: 'Margarita', itemStyle: { color: CORAL } },
+        { value: 12, name: 'Passionfruit Martini', itemStyle: { color: SPRITZ } },
+        { value: 8, name: 'Cosmopolitan', itemStyle: { color: COSMO } },
+        { value: 7, name: 'Mojito', itemStyle: { color: MOJITO } },
+        { value: 6, name: 'Spicy Margarita', itemStyle: { color: '#c94040' } },
+        { value: 19, name: 'Other SKUs', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 3: Revenue by Format ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-format'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 12, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 68, name: '125ml (14.9% ABV)', itemStyle: { color: CORAL } },
+        { value: 32, name: '200ml (10% ABV)', itemStyle: { color: MOJITO } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 4: Cost Per Can ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cost-percan'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { top: 20, bottom: 50, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Spirit /\nLiquid','Duty','Can +\nPackaging','Co-packing','Label /\nSleeve','Total\nCOGS','Retail\nMargin','MOTH\nEx-Factory'], axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£', max: 4.5, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 0.55, itemStyle: { color: ESPRESSO } },
+        { value: 0.52, itemStyle: { color: NEGATIVE } },
+        { value: 0.18, itemStyle: { color: MUTED } },
+        { value: 0.12, itemStyle: { color: '#8b5e3c' } },
+        { value: 0.08, itemStyle: { color: PALOMA } },
+        { value: 1.45, itemStyle: { color: CORAL } },
+        { value: 1.24, itemStyle: { color: '#bbb' } },
+        { value: 2.75, itemStyle: { color: POSITIVE } }
+      ],
+      label: { show: true, position: 'top', fontSize: 9, formatter: '£{c}' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 5: P&L Waterfall ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cost-waterfall'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { top: 20, bottom: 50, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Revenue\n(ex-factory)','COGS','Gross\nProfit','Marketing','Team /\nPayroll','Logistics','Overheads','EBITDA'], axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '%', max: 110, axisLabel: { fontSize: 10 } },
+    series: [
+      { type: 'bar', stack: 'w', data: [0, 54, 0, 26, 14, 10, 8, 0], itemStyle: { color: 'transparent' }, emphasis: { itemStyle: { color: 'transparent' } } },
+      { type: 'bar', stack: 'w', data: [100, 46, 54, 20, 12, 4, 2, 6],
+        itemStyle: { color: function(p){ return p.dataIndex === 0 ? CORAL : p.dataIndex === 2 ? POSITIVE : p.dataIndex === 7 ? POSITIVE : '#e8907acc'; } },
+        label: { show: true, position: 'top', fontSize: 10, formatter: function(p){ return p.value + '%'; } }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 6: Price per Can ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-percan'));
+  var brands = ['NIO\n(100ml)\n£6.50','MOTH\n(125ml)\n£3.99','Wonderland\n(250ml)\n£3.90','All Shook Up\n(250ml)\n£2.75','Served\n(250ml)\n£2.75','Funkin\n(200ml)\n£2.30'];
+  var prices = [6.50, 3.99, 3.90, 2.75, 2.75, 2.30];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 75, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£ / can', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: prices.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 1 ? CORAL : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '£{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 7: Price per Litre ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-perlitre'));
+  var brands = ['NIO\n£65/L','MOTH\n125ml\n£31.92/L','MOTH\n200ml\n£19.95/L','Wonderland\n£15.60/L','Funkin\n£11.50/L','All Shook Up\n£11.00/L'];
+  var prices = [65, 31.92, 19.95, 15.60, 11.50, 11.00];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 75, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£ / litre', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: prices.map(function(v,i){
+        return { value: v, itemStyle: { color: (i === 1 || i === 2) ? CORAL : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 9, formatter: '£{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 8: Channel Mix ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-channel-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 12, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 82, name: 'Off-Trade (Retail)', itemStyle: { color: CORAL } },
+        { value: 10, name: 'DTC (mothdrinks.com)', itemStyle: { color: ESPRESSO } },
+        { value: 8, name: 'On-Trade / Events', itemStyle: { color: SPRITZ } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 9: Rate of Sale ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-rate-of-sale'));
+  var retailers = ['Waitrose','Sainsbury\'s','Tesco','Morrisons','Asda'];
+  var rates = [5.2, 3.8, 3.4, 2.8, 2.4];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 40, left: 50, right: 20 },
+    xAxis: { type: 'category', data: retailers, axisLabel: { fontSize: 10, interval: 0 } },
+    yAxis: { type: 'value', name: 'Cans/wk/store', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: rates.map(function(v,i){
+        var cols = [CORAL, COSMO, '#2d7dd2', MOJITO, SPRITZ];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 11, formatter: '{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 10: Promo vs Full Price Split ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-promo-split'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Full Price','Promotional'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '%', max: 100, axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Full Price', type: 'bar', stack: 'vol', data: [58,62,60,65,68,72,70,66,55,50,60,64], itemStyle: { color: CORAL } },
+      { name: 'Promotional', type: 'bar', stack: 'vol', data: [42,38,40,35,32,28,30,34,45,50,40,36], itemStyle: { color: PALOMA } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 11: Promo Effectiveness ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-promo-effectiveness'));
+  var promos = ['Clubcard\n/Nectar\n(-12%)','3 for £10\n(-17%)','DTC Bundle\n(-21%)','4 for £12\n(-25%)','Party Pack\n(-31%)'];
+  var repeat = [32, 24, 38, 26, 22];
+  var uplift = [62, 120, 0, 180, 0];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Post-Promo Repeat Rate %','Volume Uplift %'], top: 0, textStyle: { fontSize: 10 } },
+    grid: { top: 40, bottom: 65, left: 50, right: 50 },
+    xAxis: { type: 'category', data: promos, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: [
+      { type: 'value', name: 'Repeat %', min: 0, max: 50, axisLabel: { fontSize: 10 } },
+      { type: 'value', name: 'Uplift %', min: 0, max: 200, axisLabel: { fontSize: 10 }, position: 'right' }
+    ],
+    series: [
+      { name: 'Post-Promo Repeat Rate %', type: 'bar', data: repeat.map(function(v){ return { value: v, itemStyle: { color: CORAL } }; }), label: { show: true, position: 'top', fontSize: 9, formatter: '{c}%' }, barWidth: '35%' },
+      { name: 'Volume Uplift %', type: 'line', yAxisIndex: 1, data: uplift, lineStyle: { color: SPRITZ, width: 2.5 }, itemStyle: { color: SPRITZ }, label: { show: true, fontSize: 9, formatter: function(p){ return p.value > 0 ? '+' + p.value + '%' : ''; } } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 12: Funding Timeline ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-funding'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 40, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Seed\n(2021)','Series A\n(Sep 2024)','Total\nRaised'], axisLabel: { fontSize: 10, interval: 0 } },
+    yAxis: { type: 'value', name: '£M', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 0.4, itemStyle: { color: PALOMA } },
+        { value: 4.6, itemStyle: { color: CORAL } },
+        { value: 5.0, itemStyle: { color: POSITIVE } }
+      ],
+      label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '£{c}M' },
+      barWidth: '45%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 11: Revenue Growth ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-growth'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['2021','2022','2023','2024','2025 (Est.)'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: '£M', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [0.6, 1.8, 4.5, 6.2, 8.6], smooth: true,
+      lineStyle: { color: CORAL, width: 3 },
+      itemStyle: { color: CORAL },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(232,93,74,0.3)' },{ offset: 1, color: 'rgba(232,93,74,0.02)' }] } },
+      label: { show: true, fontSize: 11, formatter: '£{c}M' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 12: Seasonality ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-seasonality'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Index (100 = avg)', min: 50, max: 180, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [82,75,86,100,112,125,118,108,132,168,92,68].map(function(v){
+        return { value: v, itemStyle: { color: v >= 100 ? CORAL : PALOMA } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10 }
+    }],
+    markLine: { data: [{ yAxis: 100, lineStyle: { color: '#999', type: 'dashed' } }] }
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 13: Consumer Age ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-consumer-age'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 22, name: '18–24', itemStyle: { color: CORAL } },
+        { value: 36, name: '25–34', itemStyle: { color: ESPRESSO } },
+        { value: 24, name: '35–44', itemStyle: { color: SPRITZ } },
+        { value: 12, name: '45–54', itemStyle: { color: MOJITO } },
+        { value: 6, name: '55+', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 14: Purchase Occasion ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-occasion'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 34, name: 'Home evening', itemStyle: { color: ESPRESSO } },
+        { value: 22, name: 'Social gathering', itemStyle: { color: CORAL } },
+        { value: 18, name: 'Gifting', itemStyle: { color: SPRITZ } },
+        { value: 14, name: 'Picnic / outdoor', itemStyle: { color: MOJITO } },
+        { value: 8, name: 'Festival / event', itemStyle: { color: COSMO } },
+        { value: 4, name: 'Travel', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+</script>
+</body>
+</html>
