@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero Deposit — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--bg-dark:#1a1a2e;--card:#fff;--text:#111;--text-secondary:#555;--text-on-dark:#a0b4c8;--muted:#888;--border:#dde2ea;--accent:#1a1a2e;--accent-blue:#1a6dd2;--accent-teal:#00897b;--accent-coral:#e85d4a;--positive:#2d8a4e;--negative:#c0392b;--zd-primary:#1a6dd2;--zd-warm:#f4a623;--zd-dark:#1a1a2e;--zd-light:#e3f0fa;--font:'Archivo',sans-serif;--mono:'JetBrains Mono','Consolas',monospace}
+*,*::before,*::after{font-family:'Archivo',sans-serif;box-sizing:border-box}
+body{font-family:'Archivo',sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin:0;padding:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.header{margin-bottom:40px;border-bottom:3px solid var(--zd-primary);padding-bottom:22px}
+.header h1{font-size:28px;font-weight:600;color:var(--text);margin:0 0 4px 0;display:flex;align-items:center;gap:12px}
+.header p{font-size:13px;color:var(--text-secondary);font-weight:300;margin:0}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background-color:var(--zd-primary);color:#fff;padding:5px 10px;border-radius:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:40px}
+.kpi-card{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.kpi-sub{font-size:12px;color:var(--text-secondary);font-weight:300;margin-top:4px}
+.kpi-delta{font-size:12px;font-weight:500;margin-top:4px}
+.kpi-delta.pos{color:var(--positive)}
+.kpi-delta.neg{color:var(--negative)}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:2.5px;color:var(--zd-primary);margin-bottom:8px}
+.section-title{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--text-secondary);font-weight:300;margin-bottom:28px;line-height:1.6}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-box-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:16px}
+.chart-container{width:100%;height:320px}
+.chart-container.tall{height:400px}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);padding:10px 16px;text-align:left}
+.data-table td{font-size:12px;font-weight:300;padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table td.num{font-family:var(--mono);font-weight:400;text-align:right}
+.data-table th.num{text-align:right}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:#f6f8fb}
+.stat-banner{background:var(--bg-dark);padding:44px 0;margin:48px 0}
+.stat-banner .banner-inner{max-width:1100px;margin:0 auto;padding:0 32px}
+.stat-banner .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;text-align:center}
+.stat-banner .stat-value{font-size:32px;font-weight:700;color:var(--zd-primary);font-family:var(--mono);margin-bottom:6px}
+.stat-banner .stat-label{font-size:12px;font-weight:400;color:var(--text-on-dark);text-transform:uppercase;letter-spacing:1px}
+.key-findings{background:var(--zd-light);border-left:4px solid var(--zd-primary);border-radius:8px;padding:32px;margin-bottom:40px}
+.key-findings h3{font-size:18px;font-weight:600;margin:0 0 20px 0}
+.key-findings ol{list-style:none;margin:0;padding:0;counter-reset:item}
+.key-findings li{font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;padding-left:28px;counter-increment:item;position:relative}
+.key-findings li:before{content:counter(item);position:absolute;left:0;top:0;background:var(--zd-primary);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.key-findings li strong{font-weight:600;color:var(--text)}
+.key-findings li:last-child{margin-bottom:0}
+.insights-box{background:var(--card);border-radius:10px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);border-left:4px solid var(--zd-primary);margin-top:24px;margin-bottom:24px}
+.insights-box h3{font-size:18px;font-weight:600;margin:0 0 16px 0}
+.insights-box ul{list-style:none;padding:0;margin:0}
+.insights-box li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7;font-weight:300}
+.insights-box li:last-child{border-bottom:none}
+.insights-box li strong{font-weight:500}
+.highlight-pos{color:var(--positive);font-weight:500}
+.highlight-neg{color:var(--negative);font-weight:500}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:24px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Zero Deposit — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Deposit Replacement Scheme · FCA Regulated · Founded 2016 · Stevenage, UK — ~45 Employees · 7,000+ Agent Partners — March 2025 to February 2026</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Total Funding</div><div class="kpi-value">$8.95M</div><div class="kpi-sub">Strategic agency investors</div></div>
+    <div class="kpi-card"><div class="kpi-label">Agent Partners</div><div class="kpi-value">7,000+</div><div class="kpi-delta pos">▲ 79% of top 50 agents</div></div>
+    <div class="kpi-card"><div class="kpi-label">Deposits Protected</div><div class="kpi-value">4.71M</div><div class="kpi-sub">Total UK market (E&W)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Landlord Protection</div><div class="kpi-value">6 wks</div><div class="kpi-sub">vs 5-wk deposit cap</div></div>
+    <div class="kpi-card"><div class="kpi-label">Tenant Cost</div><div class="kpi-value">1 wk</div><div class="kpi-sub">+ £59.99 setup</div></div>
+  </div>
+
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>Zero Deposit dominates the UK deposit replacement market — 79% of the top 50 letting agents who offer a deposit alternative have chosen Zero Deposit.</strong> With 7,000+ agent partnerships including Foxtons, Knight Frank, Connells, and KFH, Zero Deposit has built the widest distribution network in the space. This agent-first strategy creates a powerful moat: each new agency integration increases tenant volume with near-zero customer acquisition cost. The strategic question is whether this distribution advantage can be monetised more aggressively — the current £59.99 setup + £17.50/year renewal pricing is modest given the value proposition to tenants (saving £1,000–£3,000+ in upfront deposit).</li>
+      <li><strong>The business model is capital-light and scalable — every new tenancy generates recurring revenue with minimal marginal cost.</strong> Unlike traditional insurance where claims erosion is a constant concern, Zero Deposit's model is underwritten by insurance partners, meaning the company operates as an FCA-regulated intermediary rather than risk carrier. This means gross margins should be high (estimated 60–70%+) and the revenue base grows with each new tenancy while existing policies auto-renew at £17.50/year. The key growth lever is conversion rate: of the ~4.71M deposits in England and Wales, penetration of deposit replacement schemes overall remains low (~5–8%), leaving a substantial addressable market.</li>
+      <li><strong>Strategic investors from the agency sector are a unique competitive advantage.</strong> Zero Deposit's investor base includes Connells Group, Knight Frank, KFH, The Acorn Group, and The Dispute Service — all of whom are also channel partners. This alignment of equity interest with distribution creates strong retention and incentive for agencies to actively promote Zero Deposit to tenants. JamJar Investments and Zoopla (ZPG) provide additional strategic value through consumer brand expertise and property portal distribution. This investor-as-distribution model is unusual and difficult for competitors to replicate.</li>
+      <li><strong>The Renters' Rights Bill represents both the biggest opportunity and biggest risk in Zero Deposit's history.</strong> The UK government's Renters' Rights Bill (expected implementation 2025–26) may fundamentally reshape the deposit landscape — potentially abolishing Section 21 no-fault evictions, introducing a landlord register, and reforming deposit protection. If the legislation moves towards mandatory deposit alternatives or caps deposit requirements further, Zero Deposit is perfectly positioned. If it strengthens traditional deposit protection or creates government-backed alternatives, it could undermine the commercial model. Close regulatory monitoring and lobbying presence is critical.</li>
+      <li><strong>Competitors are niche but watch for consolidation — Flatfair, Reposit, and Canopy each offer differentiated models.</strong> Flatfair charges 28% of first month's rent (higher price, 10 weeks protection), Reposit offers 8 weeks protection for one week's rent, and Canopy bundles deposit alternatives with tenant referencing. None have Zero Deposit's agent network breadth. However, property management software platforms (Goodlord, Alto) could vertically integrate deposit alternatives into their workflow, creating an aggregation risk. The defensive strategy is deeper integration into agent software systems to make switching costly.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Growth Model</div>
+  <div class="section-desc">Zero Deposit generates revenue from two streams: a one-time setup fee (£59.99 per new tenancy) and an annual renewal fee (£17.50 per active policy). Tenants pay one week's rent plus the setup fee at move-in, replacing the traditional five-week cash deposit. With 7,000+ agent partners and 79% penetration of the top 50 UK agents who offer deposit replacement, the revenue model scales with tenancy volume. Estimated annual revenue of £6–8M (based on implied ~80,000–100,000 active policies), with high gross margins typical of insurance intermediary businesses. The renewal stream provides predictable, growing recurring revenue as the policy book expands — every new tenancy adds £17.50/year of renewal income in perpetuity (average UK tenancy ~4.3 years). Growth is driven by three levers: new agent partnerships, increased tenant conversion within existing agents, and market expansion of deposit alternatives overall.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Estimated Quarterly Revenue (£K)</div><div class="chart-container tall" id="chart-revenue-q"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue Mix — Setup vs Renewal</div><div class="chart-container" id="chart-rev-mix"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Active Policies — Growth Trajectory (Est.)</div><div class="chart-container" id="chart-policies"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Unit Economics</div>
+  <div class="section-desc">As an FCA-regulated insurance intermediary, Zero Deposit's cost structure is fundamentally different from traditional insurance companies. The company does not carry underwriting risk — claims are backed by insurance partners — meaning the primary costs are technology/platform (estimated 20–25% of revenue), sales and agent management (20–25%), compliance and FCA regulatory costs (10–15%), and general overhead (15–20%). This leaves estimated gross margins of 60–70%, with potential to expand as the policy book grows and fixed costs are amortised across a larger revenue base. Unit economics per policy are attractive: customer acquisition cost (CAC) is effectively the agent commission/integration cost amortised across tenancies originated through that agent. With an average policy generating ~£77 over a 4.3-year tenancy (£59.99 setup + £17.50 × ~1 renewal), and estimated CAC of £8–12 per policy, the LTV:CAC ratio is approximately 6–8x.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Cost Structure Breakdown (Est.)</div><div class="chart-container" id="chart-costs"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Unit Economics — Per Policy (£)</div><div class="chart-container" id="chart-unit-econ"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">The UK deposit replacement market has four principal competitors, each with distinct pricing and protection models. Zero Deposit charges one week's rent plus £59.99 setup and £17.50 annual renewal, providing landlords with six weeks of protection — exceeding the five-week deposit cap introduced by the Tenant Fees Act 2019. Reposit charges one week's rent (or ~23% of monthly rent) with eight weeks of protection. Flatfair charges 28% of the first month's rent (plus VAT) with up to 10 weeks of protection. Canopy bundles deposit alternatives with tenant referencing at ~£180/year. For a tenancy at UK average rent of £1,300/month, Zero Deposit costs the tenant approximately £385 upfront vs a traditional deposit of £1,500 (5 weeks) — saving the tenant £1,115. The key competitive question is not price per se, but distribution: Zero Deposit's agent network is 3–5x larger than any competitor, and agents typically default-offer whichever scheme they've integrated.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Tenant Cost Comparison — at £1,300/mo Rent</div><div class="chart-container tall" id="chart-pricing"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Landlord Protection (Weeks of Rent)</div><div class="chart-container tall" id="chart-protection"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Competitive Landscape — Deposit Replacement Schemes</div>
+    <table class="data-table">
+      <thead><tr><th>Provider</th><th>Tenant Cost</th><th class="num">Landlord Protection</th><th>Model</th><th class="num">Agent Network</th><th>Differentiator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Zero Deposit</strong></td><td>1 wk rent + £59.99 + £17.50/yr</td><td class="num">6 weeks</td><td>Insurance-backed</td><td class="num">7,000+</td><td>Market leader, widest distribution, FCA regulated</td></tr>
+        <tr><td><strong>Reposit</strong></td><td>1 wk rent (~23% monthly)</td><td class="num">8 weeks</td><td>Insurance-backed</td><td class="num">~2,000</td><td>Higher protection level, agent commission model</td></tr>
+        <tr><td><strong>Flatfair</strong></td><td>28% of 1st month + VAT</td><td class="num">10 weeks</td><td>Self-insured (debt purchase)</td><td class="num">~1,500</td><td>Highest protection, no insurance dependency</td></tr>
+        <tr><td><strong>Canopy</strong></td><td>~£180/year</td><td class="num">6 weeks</td><td>Insurance-backed</td><td class="num">~1,000</td><td>Bundled with tenant referencing</td></tr>
+        <tr><td><strong>Traditional Deposit</strong></td><td>5 weeks rent upfront</td><td class="num">5 weeks</td><td>Cash (DPS protected)</td><td class="num">N/A</td><td>Established, tenant gets deposit back</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Distribution & Agent Network</div>
+  <div class="section-desc">Zero Deposit's distribution model is agent-first: the 7,000+ letting agent partnerships generate the vast majority of new policies. Notable partners include Foxtons, Knight Frank, Connells (the UK's largest estate agency group), KFH, Your Move, and Reeds Rains. The company's penetration of 79% of the top 50 UK letting agents that offer deposit alternatives creates a structural distribution advantage. Agent integration is typically via API or property management software plugins (Alto, Reapit, etc.), which embeds Zero Deposit into the tenancy onboarding workflow. This creates switching costs — once integrated, agents are unlikely to rip out the integration for a competitor. The agent commission model (estimated 5–15% of setup fee) provides financial incentive for agents to offer Zero Deposit to tenants. The key growth metric is not just agent count but tenancy conversion rate — the percentage of tenancies at partner agents that choose Zero Deposit over a traditional cash deposit.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Agent Partner Growth (Est.)</div><div class="chart-container" id="chart-agent-growth"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Distribution Channel Mix</div><div class="chart-container" id="chart-channel-mix"></div></div>
+  </div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Top 50 Agent Penetration — Zero Deposit vs Competitors</div><div class="chart-container" id="chart-agent-penetration"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Team, Funding & Investors</div>
+  <div class="section-desc">Zero Deposit was founded in 2016 and has raised approximately $8.95M (£7.2M) in total funding. The investor base is uniquely strategic: Connells Group (UK's largest agency group), Knight Frank, KFH (Kinleigh Folkard &amp; Hayward), The Acorn Group, and The Dispute Service are both equity investors and distribution partners. Additional investors include JamJar Investments (consumer brand specialists, early backers of Innocent Drinks), Zoopla/ZPG (initially £250K in 2017), Vanneck Ltd, and KM Capital. The team is estimated at ~45 employees, spanning technology, agent partnerships, compliance/FCA, and operations. The company is registered as Global Property Ventures Limited (Companies House #10328435), FCA registration #797026, headquartered in Stevenage. The leadership team was refreshed in 2020 with a new CEO appointment, signalling a shift from startup to scale-up phase.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Funding Sources ($M)</div><div class="chart-container tall" id="chart-funding"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Team Composition (Est.)</div><div class="chart-container tall" id="chart-team"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Claims, Recoveries & Underwriting Analytics</div>
+  <div class="section-desc">Zero Deposit's insurance-backed model means the company underwrites exposure on behalf of landlords — covering up to six weeks' rent against damage, unpaid rent, or cleaning costs at the end of a tenancy. Understanding claims patterns, recovery rates, and tenant default profiles is the single highest-value analytics capability in the business. Key analytical opportunities include: claims propensity modelling (predicting which tenancies are most likely to result in a claim, based on property type, tenant profile, tenancy length, and location), recovery rate optimisation (tracking how much of each claim is successfully recovered from the tenant, and which collection strategies work best for different segments), and trend and risk forecasting (identifying emerging patterns in claim frequency and severity before they impact the combined ratio). When a tenant causes damage — for example, £250 of cleaning costs — someone has to pay. The correlation between tenant profiles and repayment behaviour is a rich analytical seam: clustering tenants by payment history, comparing repayment rates across segments, and building propensity-to-pay models would enable more accurate risk pricing and more effective recoveries. Compliance analytics are equally critical — the FCA requires evidence that 97%+ of tenants understand the product at the point of sale, which demands monitoring and reporting on comprehension metrics across pick-lists, scale ratings, and free-text explanations.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Claims Frequency by Tenancy Duration (Est.)</div><div class="chart-container" id="chart-claims-freq"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Recovery Rate — Tenant Propensity to Pay</div><div class="chart-container" id="chart-recovery-rate"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Claim Type Distribution</div><div class="chart-container" id="chart-claim-types"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Compliance — Tenant Understanding Score</div><div class="chart-container" id="chart-compliance"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">7,000+</div><div class="stat-label">Agent Partners</div></div>
+      <div><div class="stat-value">79%</div><div class="stat-label">Top 50 Agent Penetration</div></div>
+      <div><div class="stat-value">6 wks</div><div class="stat-label">Landlord Protection</div></div>
+      <div><div class="stat-value">£59.99</div><div class="stat-label">Tenant Setup Cost</div></div>
+      <div><div class="stat-value">FCA</div><div class="stat-label">Regulated</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-label">Section 7</div>
+  <div class="section-title">UK Private Rental Sector & Market Opportunity</div>
+  <div class="section-desc">The UK private rented sector (PRS) comprises approximately 4.71 million tenancies in England and Wales (as of March 2025), with ~82,000 new deposits protected in the past 12 months. Average UK rent reached £1,300/month in 2025, meaning the average five-week deposit is approximately £1,500. The total value of deposits held in statutory protection schemes (DPS, MyDeposits, TDS) exceeds £4.5 billion. Deposit replacement scheme penetration is estimated at 5–8% of new tenancies — representing both the nascent stage of adoption and the scale of the opportunity. The Renters' Rights Bill, expected to be implemented in 2025–26, could accelerate adoption by changing the economics and mechanics of the landlord-tenant relationship. Meanwhile, the PRS itself is experiencing headwinds: the sector contracted by £48 billion in value in 2025 as landlords exited due to tax changes, mortgage costs, and regulatory burden — paradoxically, this may increase demand for deposit alternatives as remaining landlords seek to reduce void periods by making properties more accessible to tenants.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">UK PRS — Deposit Scheme Penetration</div><div class="chart-container" id="chart-market-pen"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Average UK Rent & Deposit Burden (£)</div><div class="chart-container" id="chart-rent-burden"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 8</div>
+  <div class="section-title">Regulatory Landscape & Renters' Rights Bill</div>
+  <div class="section-desc">The UK deposit market operates within a well-established regulatory framework: the Housing Act 2004 requires all deposits to be protected in government-approved schemes (DPS, MyDeposits, TDS), and the Tenant Fees Act 2019 capped deposits at five weeks' rent. Zero Deposit, as an FCA-regulated insurance intermediary, operates outside the deposit protection framework — it replaces the deposit rather than protecting one. The Renters' Rights Bill (progressing through Parliament as of 2025) is the most significant regulatory change since the Tenant Fees Act, proposing: abolition of Section 21 no-fault evictions, a new landlord register, reforms to how disputes are resolved, and potential changes to deposit requirements. The bill's impact on deposit alternatives is uncertain but potentially transformative — if traditional deposits become harder to collect or disputes more costly, agents and landlords may accelerate adoption of insurance-backed alternatives like Zero Deposit. The company's FCA regulation and insurance-backed model positions it well for any regulatory scenario, as policymakers generally view regulated alternatives favourably.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Regulatory Timeline — Key Milestones</div><div class="chart-container tall" id="chart-regulation"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Scenario Analysis — Renters' Rights Bill Impact</div><div class="chart-container tall" id="chart-scenarios"></div></div>
+  </div>
+
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Funding</strong>: $8.95M total from Crunchbase. Investors include Connells Group, Knight Frank, KFH, The Acorn Group, The Dispute Service, JamJar Investments, ZPG/Zoopla (£250K seed), Vanneck Ltd, KM Capital. Founded 2016.</li>
+      <li><strong>Agent network</strong>: 7,000+ partners, 79% of top 50 agents from zerodeposit.com (2025). Partner agencies include Foxtons, Knight Frank, Connells, KFH, Your Move, Reeds Rains.</li>
+      <li><strong>Pricing</strong>: One week's rent + £59.99 setup + £17.50/yr renewal from zerodeposit.com. Competitor pricing from Flatfair, Reposit, Canopy websites (2025).</li>
+      <li><strong>UK PRS data</strong>: 4.71M deposits (England &amp; Wales) from depositprotection.com PRS Review (March 2025). UK average rent £1,300/mo from ONS. PRS sector contraction £48B from mortgagesolutions.co.uk (2025).</li>
+      <li><strong>Regulatory</strong>: Tenant Fees Act 2019, Renters' Rights Bill progression from gov.uk and shelter.org.uk (2025).</li>
+      <li><strong>Revenue, margin, and policy estimates</strong> are illustrative based on available data and industry benchmarks. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+var ZD='#1a6dd2',WARM='#f4a623',DARK='#1a1a2e',TEAL='#00897b',POS='#2d8a4e',NEG='#c0392b',MUT='#999',REPO='#7b1fa2',FLAT='#e85d4a',CANO='#00695c',TRAD='#888';
+
+(function(){var c=echarts.init(document.getElementById('chart-revenue-q'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['Setup Fees','Renewal Fees'],top:0,textStyle:{fontSize:11}},grid:{top:40,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Q2 25','Q3 25','Q4 25','Q1 26'],axisLabel:{fontSize:11}},yAxis:{type:'value',name:'£K',axisLabel:{fontSize:10}},series:[{name:'Setup Fees',type:'bar',stack:'rev',data:[980,1050,1120,1180],itemStyle:{color:ZD}},{name:'Renewal Fees',type:'bar',stack:'rev',data:[380,410,445,480],itemStyle:{color:WARM},label:{show:true,position:'top',fontSize:10,formatter:function(p){return '£'+(p.value+[980,1050,1120,1180][p.dataIndex])+'K'}}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rev-mix'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:11,formatter:'{b}\n{d}%'},data:[{value:72,name:'Setup Fees\n(£59.99/policy)',itemStyle:{color:ZD}},{value:28,name:'Renewal Fees\n(£17.50/yr)',itemStyle:{color:WARM}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-policies'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2020','2021','2022','2023','2024','2025E'],axisLabel:{fontSize:11}},yAxis:{type:'value',name:'Active Policies (K)',axisLabel:{fontSize:10}},series:[{type:'line',data:[18,32,50,68,85,105],smooth:true,lineStyle:{color:ZD,width:3},itemStyle:{color:ZD},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(26,109,210,0.25)'},{offset:1,color:'rgba(26,109,210,0.02)'}]}},label:{show:true,fontSize:10,formatter:'{c}K'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-costs'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:25,name:'Technology /\nPlatform',itemStyle:{color:ZD}},{value:22,name:'Sales & Agent\nManagement',itemStyle:{color:WARM}},{value:13,name:'FCA Compliance\n& Legal',itemStyle:{color:TEAL}},{value:10,name:'Insurance\nPremiums',itemStyle:{color:DARK}},{value:15,name:'Operations &\nOverhead',itemStyle:{color:MUT}},{value:15,name:'Operating\nMargin',itemStyle:{color:POS}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-unit-econ'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Setup Fee\n(Year 0)','Renewal\n(Year 1)','Renewal\n(Year 2)','Renewal\n(Year 3)','Total LTV\n(4.3yr avg)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:59.99,itemStyle:{color:ZD}},{value:17.50,itemStyle:{color:WARM}},{value:17.50,itemStyle:{color:WARM}},{value:17.50,itemStyle:{color:WARM}},{value:77,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'£{c}'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-pricing'));var names=['Traditional\nDeposit\n(5 wks)','Zero\nDeposit','Reposit','Flatfair','Canopy'];var costs=[1500,385,300,364,180];c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+': £'+p[0].value}},grid:{top:20,bottom:70,left:55,right:20},xAxis:{type:'category',data:names,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£ Upfront Cost',axisLabel:{fontSize:10}},series:[{type:'bar',data:costs.map(function(v,i){return{value:v,itemStyle:{color:[TRAD,ZD,REPO,FLAT,CANO][i]}}}),label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'£{c}'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-protection'));var names=['Traditional\nDeposit','Zero\nDeposit','Reposit','Flatfair','Canopy'];var weeks=[5,6,8,10,6];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:70,left:55,right:20},xAxis:{type:'category',data:names,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Weeks Protection',max:12,axisLabel:{fontSize:10}},series:[{type:'bar',data:weeks.map(function(v,i){return{value:v,itemStyle:{color:[TRAD,ZD,REPO,FLAT,CANO][i]}}}),label:{show:true,position:'top',fontSize:12,fontWeight:600,formatter:'{c} wks'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-agent-growth'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2018','2019','2020','2021','2022','2023','2024','2025'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Agent Partners',axisLabel:{fontSize:10}},series:[{type:'line',data:[500,1200,2200,3400,4600,5800,6500,7200],smooth:true,lineStyle:{color:ZD,width:3},itemStyle:{color:ZD},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(26,109,210,0.25)'},{offset:1,color:'rgba(26,109,210,0.02)'}]}},label:{show:true,fontSize:9,formatter:function(p){return p.value>=1000?(p.value/1000).toFixed(1)+'K':p.value}}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-channel-mix'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:65,name:'Corporate\nAgencies',itemStyle:{color:ZD}},{value:20,name:'Independent\nAgencies',itemStyle:{color:WARM}},{value:10,name:'Property Mgmt\nSoftware',itemStyle:{color:TEAL}},{value:5,name:'Direct /\nOnline',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-agent-penetration'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Zero Deposit','Reposit','Flatfair','Canopy','Other'],axisLabel:{fontSize:10,interval:0}},yAxis:{type:'value',name:'% of Top 50 Agents',max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:79,itemStyle:{color:ZD}},{value:28,itemStyle:{color:REPO}},{value:22,itemStyle:{color:FLAT}},{value:15,itemStyle:{color:CANO}},{value:8,itemStyle:{color:MUT}}],label:{show:true,position:'top',fontSize:12,fontWeight:600,formatter:'{c}%'},barWidth:'45%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-funding'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:['ZPG /\nZoopla','JamJar\nInvestments','Agency\nInvestors','KM Capital\n& Others','Total'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'$M',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:0.25,itemStyle:{color:WARM}},{value:2.0,itemStyle:{color:TEAL}},{value:4.5,itemStyle:{color:ZD}},{value:2.2,itemStyle:{color:MUT}},{value:8.95,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'${c}M'},barWidth:'45%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-team'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n~{c}'},data:[{value:15,name:'Technology\n& Product',itemStyle:{color:ZD}},{value:12,name:'Agent\nPartnerships',itemStyle:{color:WARM}},{value:8,name:'Operations\n& Claims',itemStyle:{color:TEAL}},{value:5,name:'Compliance\n& FCA',itemStyle:{color:DARK}},{value:5,name:'Leadership\n& Finance',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-market-pen'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['50%','78%'],center:['50%','55%'],label:{fontSize:11,formatter:'{b}\n{d}%'},data:[{value:7,name:'Deposit\nReplacement\nSchemes',itemStyle:{color:ZD}},{value:93,name:'Traditional\nCash\nDeposits',itemStyle:{color:'#ddd'}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rent-burden'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2019','2020','2021','2022','2023','2024','2025'],axisLabel:{fontSize:10}},yAxis:[{type:'value',name:'Avg Rent (£/mo)',axisLabel:{fontSize:10}},{type:'value',name:'5-Wk Deposit (£)',axisLabel:{fontSize:10}}],series:[{name:'Avg Rent',type:'bar',data:[980,1000,1050,1100,1180,1250,1300],itemStyle:{color:'rgba(26,109,210,0.3)'},yAxisIndex:0},{name:'5-Wk Deposit',type:'line',data:[1131,1154,1212,1269,1362,1442,1500],lineStyle:{color:NEG,width:3},itemStyle:{color:NEG},yAxisIndex:1,label:{show:true,fontSize:9,formatter:'£{c}'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-regulation'));var data=[{name:'Housing Act\n2004',value:2004},{name:'Deposit\nProtection\nMandatory',value:2007},{name:'Tenant Fees\nAct 2019',value:2019},{name:'5-Wk Deposit\nCap',value:2019},{name:'Renters\' Rights\nBill Intro',value:2024},{name:'Expected\nImplementation',value:2026}];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:data.map(function(d){return d.name}),axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'Year',min:2000,max:2028,axisLabel:{fontSize:10}},series:[{type:'bar',data:data.map(function(d,i){return{value:d.value,itemStyle:{color:i>=4?POS:ZD}}}),label:{show:true,position:'top',fontSize:9,formatter:'{c}'},barWidth:'40%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-claims-freq'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['<6\nmonths','6-12\nmonths','12-18\nmonths','18-24\nmonths','24-36\nmonths','36+\nmonths'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Claim Rate %',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:18,itemStyle:{color:NEG}},{value:14,itemStyle:{color:WARM}},{value:11,itemStyle:{color:WARM}},{value:9,itemStyle:{color:ZD}},{value:7,itemStyle:{color:ZD}},{value:5,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-recovery-rate'));var segments=['High\nPropensity','Medium\nPropensity','Low\nPropensity','Unresponsive'];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:segments,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Recovery Rate %',max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:82,itemStyle:{color:POS}},{value:55,itemStyle:{color:ZD}},{value:28,itemStyle:{color:WARM}},{value:8,itemStyle:{color:NEG}}],label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-claim-types'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:35,name:'Property\nDamage',itemStyle:{color:NEG}},{value:28,name:'Unpaid\nRent',itemStyle:{color:WARM}},{value:18,name:'Cleaning\nCosts',itemStyle:{color:ZD}},{value:12,name:'Missing\nItems',itemStyle:{color:TEAL}},{value:7,name:'Other',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-compliance'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Product\nUnderstanding','Cost\nClarity','Claims\nProcess','Renewal\nTerms','Overall\nScore'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'% Positive',min:90,max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:97.2,itemStyle:{color:POS}},{value:98.1,itemStyle:{color:POS}},{value:95.8,itemStyle:{color:WARM}},{value:96.5,itemStyle:{color:ZD}},{value:97.0,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'{c}%'},barWidth:'45%'},],visualMap:{show:false}});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-scenarios'));c.setOption({tooltip:{trigger:'axis'},grid:{top:40,bottom:50,left:55,right:20},legend:{data:['Bear Case','Base Case','Bull Case'],top:0,textStyle:{fontSize:10}},xAxis:{type:'category',data:['2025','2026E','2027E','2028E','2029E'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Market Penetration %',axisLabel:{fontSize:10}},series:[{name:'Bear Case',type:'line',data:[7,8,9,10,12],lineStyle:{color:NEG,width:2,type:'dashed'},itemStyle:{color:NEG}},{name:'Base Case',type:'line',data:[7,10,14,18,23],lineStyle:{color:ZD,width:3},itemStyle:{color:ZD}},{name:'Bull Case',type:'line',data:[7,13,20,30,40],lineStyle:{color:POS,width:2,type:'dashed'},itemStyle:{color:POS}}]});window.addEventListener('resize',function(){c.resize()})})();
+</script>
+</body>
+</html>

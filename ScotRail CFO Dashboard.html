@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScotRail — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--bg-dark:#1a237e;--card:#fff;--text:#111;--text-secondary:#555;--text-on-dark:#a0b4e8;--muted:#888;--border:#dde2ea;--accent:#1a237e;--accent-blue:#1565c0;--positive:#2d8a4e;--negative:#c0392b;--sr-primary:#1a237e;--sr-blue:#1565c0;--sr-teal:#00838f;--sr-saltire:#0065bd;--sr-warm:#f4a623;--sr-rail:#546e7a;--font:'Archivo',sans-serif;--mono:'JetBrains Mono','Consolas',monospace}
+*,*::before,*::after{font-family:'Archivo',sans-serif;box-sizing:border-box}
+body{font-family:'Archivo',sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin:0;padding:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.header{margin-bottom:40px;border-bottom:3px solid var(--sr-saltire);padding-bottom:22px}
+.header h1{font-size:28px;font-weight:600;color:var(--text);margin:0 0 4px 0;display:flex;align-items:center;gap:12px}
+.header p{font-size:13px;color:var(--text-secondary);font-weight:300;margin:0}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background-color:var(--sr-saltire);color:#fff;padding:5px 10px;border-radius:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:40px}
+.kpi-card{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.kpi-sub{font-size:12px;color:var(--text-secondary);font-weight:300;margin-top:4px}
+.kpi-delta{font-size:12px;font-weight:500;margin-top:4px}
+.kpi-delta.pos{color:var(--positive)}
+.kpi-delta.neg{color:var(--negative)}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:2.5px;color:var(--sr-saltire);margin-bottom:8px}
+.section-title{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--text-secondary);font-weight:300;margin-bottom:28px;line-height:1.6}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-box-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:16px}
+.chart-container{width:100%;height:320px}
+.chart-container.tall{height:400px}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);padding:10px 16px;text-align:left}
+.data-table td{font-size:12px;font-weight:300;padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table td.num{font-family:var(--mono);font-weight:400;text-align:right}
+.data-table th.num{text-align:right}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:#f6f8fb}
+.stat-banner{background:var(--bg-dark);padding:44px 0;margin:48px 0}
+.stat-banner .banner-inner{max-width:1100px;margin:0 auto;padding:0 32px}
+.stat-banner .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;text-align:center}
+.stat-banner .stat-value{font-size:32px;font-weight:700;color:var(--sr-warm);font-family:var(--mono);margin-bottom:6px}
+.stat-banner .stat-label{font-size:12px;font-weight:400;color:var(--text-on-dark);text-transform:uppercase;letter-spacing:1px}
+.key-findings{background:#e8eaf6;border-left:4px solid var(--sr-saltire);border-radius:8px;padding:32px;margin-bottom:40px}
+.key-findings h3{font-size:18px;font-weight:600;margin:0 0 20px 0}
+.key-findings ol{list-style:none;margin:0;padding:0;counter-reset:item}
+.key-findings li{font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;padding-left:28px;counter-increment:item;position:relative}
+.key-findings li:before{content:counter(item);position:absolute;left:0;top:0;background:var(--sr-saltire);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.key-findings li strong{font-weight:600;color:var(--text)}
+.key-findings li:last-child{margin-bottom:0}
+.insights-box{background:var(--card);border-radius:10px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);border-left:4px solid var(--sr-saltire);margin-top:24px;margin-bottom:24px}
+.insights-box h3{font-size:18px;font-weight:600;margin:0 0 16px 0}
+.insights-box ul{list-style:none;padding:0;margin:0}
+.insights-box li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7;font-weight:300}
+.insights-box li:last-child{border-bottom:none}
+.insights-box li strong{font-weight:500}
+.highlight-pos{color:var(--positive);font-weight:500}
+.highlight-neg{color:var(--negative);font-weight:500}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:24px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>ScotRail — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Publicly Owned Rail Operator · Transport Scotland / Scottish Rail Holdings · 5,398 FTE · 358 Stations · 3,120 Route-km — March 2025 to February 2026</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Passenger Journeys</div><div class="kpi-value">81.1M</div><div class="kpi-delta pos">▲ 27% YoY (FY 2023/24)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Expenditure</div><div class="kpi-value">£784M</div><div class="kpi-sub">FY 2023/24</div></div>
+    <div class="kpi-card"><div class="kpi-label">Economic Impact</div><div class="kpi-value">£4B+</div><div class="kpi-sub">Total contribution to Scotland</div></div>
+    <div class="kpi-card"><div class="kpi-label">Punctuality</div><div class="kpi-value">89.4%</div><div class="kpi-delta pos">▲ 1.8% cancellation rate</div></div>
+    <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value">5,398</div><div class="kpi-sub">FTE (March 2024)</div></div>
+  </div>
+
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>The abolition of peak fares (1 September 2025) is the most significant pricing experiment in British rail history — and the financial implications are only beginning to be understood.</strong> By eliminating the price differential between peak and off-peak travel, ScotRail has effectively reduced fares by up to 50% on many commuter journeys. FY 2023/24 delivered 81.1M passenger journeys (ORR), up 27% year-on-year but still 16% below the pre-pandemic 96.4M. December 2025 recorded 7.87M journeys — the busiest December under public ownership. The critical CFO question is revenue yield: are the additional passengers compensating for the lower average fare? Ticket-level and flow-level data analysis is essential to isolate the revenue impact by route, time of day, and ticket type. This is where aggregated reporting loses insight — understanding revenue drivers at the flow level, not just the P&amp;L level, is the difference between knowing "revenue went up" and knowing "why revenue went up, and how to capture more."</li>
+      <li><strong>Operating costs of £784M (FY 2023/24) are dominated by staff costs (~£300M, 38%) and rolling stock (~£134M, 17%) — the cost base is largely fixed, making revenue growth the primary lever for financial improvement.</strong> With 5,398 FTEs, staff productivity metrics (passengers per FTE, revenue per FTE) are critical. Maintenance and running costs (~£131M) are the area most amenable to data-driven optimisation — predictive maintenance, asset condition monitoring, and linking operational data to engineering data could reduce unplanned maintenance costs by 10–20%. The challenge is that asset data and operational data currently sit in separate systems with different coding structures, making integrated analysis difficult without significant data transformation effort.</li>
+      <li><strong>ScotRail's real competitor is the car, not the bus — and winning that modal shift battle requires understanding journey economics at a granular level.</strong> The vast majority of journeys in Scotland are made by car. Rail's modal share is approximately 4–5% of all journeys, meaning the growth opportunity is enormous but requires making rail competitive on door-to-door journey time, cost, and convenience for specific origin-destination pairs. Data on car journey costs (fuel, parking, tolls), bus connections, and rail journey times by flow would enable targeted pricing and marketing strategies. Credit card data, mobile phone data, and census/demographic data are all available but currently used in an ad-hoc, project-by-project manner rather than as a systematic, always-on analytical capability.</li>
+      <li><strong>Data exists in abundance but the analytical capability to extract value from it is underdeveloped — there is significant revenue being left on the table.</strong> ScotRail has access to P&amp;L data, ticket-level sales data, flow data, credit card data, mobile phone data, train loading data, market share data, census data, and demographic data. The challenge is not data scarcity but data integration and speed of insight: gathering data takes days at the start of each project, followed by significant cleansing effort (mapping ONS codes to SIC codes, reconciling local authority codes between Scotland and England, adjusting for strikes and weather disruption). When data is aggregated to report level, insight is lost — the drivers of revenue performance and cost variation are buried in the detail. A systematic analytics platform that enables rapid data integration and drill-down from P&amp;L to flow-level performance would, in the words of internal stakeholders, save significant time and prevent insights from being left unanswered.</li>
+      <li><strong>Transport Scotland recognises the gap — and there is genuine appetite at leadership level to close it.</strong> There is an explicit acknowledgement within Transport Scotland that the organisation needs to link asset data with operational data, invest in data governance and systems, and develop a more mature strategic analytics capability. The creation of Great British Railways and its data ambitions at the UK level, combined with Scotland's devolved rail operations, creates both an opportunity and a benchmark. European operators (particularly Eurostar and the Nordic rail companies) are leagues ahead in using data for revenue management, demand forecasting, and customer segmentation — ScotRail has the data assets to reach a similar level but needs the systems, governance, and analytical tooling to get there.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Passenger Performance</div>
+  <div class="section-desc">ScotRail's revenue is primarily driven by passenger ticket sales, supplemented by government subsidy from Transport Scotland. Total group expenditure was £784.3M in FY 2023/24 (up from £698.1M the previous year), with passenger revenue of £479M from journeys originating in Scotland (FY 2022/23, latest published). The permanent abolition of peak fares from 1 September 2025 removed the price differential on commuter routes, reducing many fares by up to 50%. FY 2023/24 saw 81.1M passenger journeys (ORR), a 27% increase on 2022/23 (63.7M) though still 16% below the pre-pandemic 96.4M (2019/20). December 2025 recorded 7.87M journeys — the busiest December since public ownership (April 2022). The critical analytical question is revenue yield analysis: are additional passenger volumes compensating for lower average fares? This requires ticket-level and flow-level revenue decomposition — not just top-line P&amp;L reporting — to understand the elasticity of demand by route, time of day, and ticket type. The ability to rapidly answer "what happened and why" at a granular level is the difference between reactive reporting and proactive revenue management.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Monthly Passenger Journeys (Millions)</div><div class="chart-container tall" id="chart-pax"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue Composition (Est. £M)</div><div class="chart-container" id="chart-rev-comp"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Peak Fare Abolition — Revenue Impact Scenario</div><div class="chart-container" id="chart-peak-impact"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Operating Cost Structure</div>
+  <div class="section-desc">ScotRail's cost base is heavily fixed: staff costs account for approximately 38% of total expenditure (~£300M), rolling stock hire and leasing ~17% (~£134M), and maintenance and running costs ~17% (~£131M). Network access charges paid to Network Rail, energy costs, and administrative overhead comprise the balance. With a largely fixed cost structure, the primary financial lever is revenue growth — every additional passenger journey contributes disproportionately to the bottom line once fixed costs are covered. The areas most amenable to data-driven cost reduction are: predictive maintenance (reducing unplanned failures and associated delay costs), crew and rolling stock scheduling optimisation, and energy management. The challenge is that asset condition data, operational performance data, and financial cost data currently reside in separate systems with incompatible coding structures — integrating these data sets is a prerequisite for meaningful cost analytics.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Cost Breakdown — FY 2023/24 (£M)</div><div class="chart-container tall" id="chart-costs"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Cost per Passenger Journey Trend (£)</div><div class="chart-container tall" id="chart-cost-pax"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Staff Productivity Metrics</div>
+    <table class="data-table">
+      <thead><tr><th>Metric</th><th class="num">FY 2021/22</th><th class="num">FY 2022/23</th><th class="num">FY 2023/24</th><th class="num">Trend</th></tr></thead>
+      <tbody>
+        <tr><td><strong>FTE Employees</strong></td><td class="num">5,150</td><td class="num">5,280</td><td class="num">5,398</td><td class="num"><span class="highlight-neg">▲ 4.8%</span></td></tr>
+        <tr><td><strong>Passenger Journeys per FTE</strong></td><td class="num">12,620</td><td class="num">14,770</td><td class="num">16,300</td><td class="num"><span class="highlight-pos">▲ 29%</span></td></tr>
+        <tr><td><strong>Staff Cost per Journey (£)</strong></td><td class="num">£4.62</td><td class="num">£3.85</td><td class="num">£3.41</td><td class="num"><span class="highlight-pos">▼ 26%</span></td></tr>
+        <tr><td><strong>Revenue per FTE (£K)</strong></td><td class="num">£68K</td><td class="num">£78K</td><td class="num">£87K</td><td class="num"><span class="highlight-pos">▲ 28%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Pricing, Fares & Competitive Benchmarking</div>
+  <div class="section-desc">ScotRail's pricing landscape was transformed by the permanent abolition of peak fares on 1 September 2025 — a first for rail in Britain. This means passengers pay the same fare regardless of time of travel, effectively reducing many peak commuter fares by up to 50%. The policy aims to attract car users to rail by making train travel more competitive on price. For a typical Edinburgh–Glasgow commute (~50 miles), the peak single was approximately £28.90, now reduced to the off-peak rate of ~£16.20. Comparisons with car travel show rail is now competitive: driving Edinburgh–Glasgow costs approximately £12–15 in fuel plus £10–15 in city centre parking, totalling £22–30 per return trip. Adding time, convenience, and environmental factors, the case for rail is strengthening. However, effective yield management without peak fares requires sophisticated demand forecasting and revenue analysis at the flow level — understanding which routes and times generate the most incremental passengers, and which are simply experiencing revenue dilution from existing passengers paying less.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Edinburgh–Glasgow — Modal Cost Comparison (Return)</div><div class="chart-container tall" id="chart-modal-cost"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Key Route Fares — Post Peak Abolition (Single)</div><div class="chart-container tall" id="chart-fares"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Fare Structure — ScotRail Products</div>
+    <table class="data-table">
+      <thead><tr><th>Ticket Type</th><th>Description</th><th class="num">Example Fare</th><th>Target Segment</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Anytime Single/Return</strong></td><td>Any train, any time (formerly peak — now same price)</td><td class="num">£16.20</td><td>Commuters, business</td></tr>
+        <tr><td><strong>Advance Single</strong></td><td>Book ahead, specific train — up to 60% off</td><td class="num">£7.50</td><td>Leisure, price-sensitive</td></tr>
+        <tr><td><strong>Kids for a Quid</strong></td><td>Up to 4 children travel for £1 return each</td><td class="num">£1.00</td><td>Families</td></tr>
+        <tr><td><strong>Season Ticket (Monthly)</strong></td><td>Unlimited travel on route — commuter product</td><td class="num">£330</td><td>Daily commuters</td></tr>
+        <tr><td><strong>Spirit of Scotland Pass</strong></td><td>4 or 8 days unlimited travel in 8/15 day period</td><td class="num">£155 / £185</td><td>Tourists</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Modal Competition & Market Share</div>
+  <div class="section-desc">Rail's modal share in Scotland is approximately 4–5% of all journeys. The car dominates with ~65% of trips. Bus accounts for ~12% and active travel (walking/cycling) ~18%. ScotRail's strategic objective is modal shift from car to rail — bus operators are partners (timetable coordination, integrated ticketing) rather than competitors. The growth opportunity is vast: even a 1 percentage point shift from car to rail across Scotland would represent approximately 40–50 million additional annual rail journeys — a 50%+ increase on current volumes. Targeting this shift requires granular understanding of journey patterns: for which origin-destination pairs is rail competitive on time and cost vs car? Where are there latent demand pools (growing housing developments, employment centres, universities) that current services don't adequately serve? Mobile phone data, credit card data, and census/demographic data can all inform this analysis, but they are currently deployed on a project-by-project basis rather than as a continuous, systematic capability. Train loading data reveals capacity constraints that limit growth on already-popular routes, while market share data relative to car and air on specific corridors (e.g., Edinburgh–Glasgow, Glasgow–Aberdeen, Edinburgh–Dundee) shows where rail is gaining or losing ground.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Scotland — Modal Share of Journeys</div><div class="chart-container" id="chart-modal-share"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Rail vs Car — Key Corridor Journey Times (mins)</div><div class="chart-container" id="chart-journey-times"></div></div>
+  </div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Passenger Volume Recovery — Post-Covid to Peak Fare Abolition</div><div class="chart-container" id="chart-recovery"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Punctuality, Reliability & Operations</div>
+  <div class="section-desc">ScotRail's punctuality reached 89.4% in FY 2023/24 (ORR), with 95.0% of services arriving within 10 minutes of schedule and only 1.8% cancelled. Reliability (percentage of planned services that actually run) has also improved, with cancellations reducing year-on-year. These metrics directly impact revenue — every cancelled or significantly delayed service costs revenue (through Delay Repay compensation), damages customer trust, and undermines the case for modal shift from car. The financial impact of poor performance is asymmetric: a 1% improvement in punctuality may generate 2–3% incremental revenue growth through improved customer confidence and repeat travel. Linking operational performance data (train movements, delays, cancellations, causes) with revenue data (ticket sales on affected services, Delay Repay claims, subsequent booking patterns) would enable ScotRail to quantify the revenue impact of individual infrastructure or operational failures — informing investment prioritisation and Network Rail discussions.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Punctuality Trend — % On Time</div><div class="chart-container" id="chart-punctuality"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Cancellation Causes — Attribution</div><div class="chart-container" id="chart-cancellations"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">7.87M</div><div class="stat-label">Dec '25 Journeys (Record)</div></div>
+      <div><div class="stat-value">89.4%</div><div class="stat-label">Punctuality (FY 23/24)</div></div>
+      <div><div class="stat-value">£4B+</div><div class="stat-label">Economic Impact</div></div>
+      <div><div class="stat-value">358</div><div class="stat-label">Stations</div></div>
+      <div><div class="stat-value">No Peak</div><div class="stat-label">Fares Abolished</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Route & Flow Performance</div>
+  <div class="section-desc">ScotRail operates approximately 2,500 services daily across 360 stations, covering routes from the Central Belt commuter network (Edinburgh–Glasgow, Edinburgh–Fife, Glasgow suburban) to longer-distance routes (Aberdeen, Inverness, the Highlands, Borders Railway). Revenue and passenger performance varies dramatically by route: the Central Belt generates the majority of revenue and passenger volume, while rural and Highland routes are heavily subsidised but provide essential connectivity. Flow-level analysis — examining revenue, passenger numbers, yield (revenue per passenger-mile), and load factor by individual origin-destination pair — is the key to identifying where revenue is being left on the table. A flow generating high passenger volumes but low yield may indicate pricing opportunity; a flow with high yield but low volumes may indicate untapped demand if frequency or journey time improved. Currently, this level of analysis requires days of data gathering and cleansing at the start of each project — a systematic, always-on flow performance dashboard would transform the speed and quality of commercial decision-making.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue by Route Corridor (Est. £M)</div><div class="chart-container tall" id="chart-route-rev"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Load Factor by Time of Day — Central Belt</div><div class="chart-container tall" id="chart-load-factor"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Top 10 Flows — Revenue & Passenger Performance</div>
+    <table class="data-table">
+      <thead><tr><th>Flow</th><th class="num">Pax/Year (M)</th><th class="num">Revenue (£M)</th><th class="num">Yield (£/journey)</th><th class="num">Load Factor</th><th>Opportunity</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Edinburgh – Glasgow</strong></td><td class="num">4.8</td><td class="num">£62</td><td class="num">£12.90</td><td class="num">72%</td><td>Peak fare abolition uplift tracking</td></tr>
+        <tr><td><strong>Glasgow Suburban</strong></td><td class="num">12.5</td><td class="num">£48</td><td class="num">£3.84</td><td class="num">58%</td><td>Frequency/capacity optimisation</td></tr>
+        <tr><td><strong>Edinburgh – Fife</strong></td><td class="num">5.2</td><td class="num">£36</td><td class="num">£6.92</td><td class="num">65%</td><td>Forth Bridge constraint analysis</td></tr>
+        <tr><td><strong>Edinburgh Suburban</strong></td><td class="num">8.1</td><td class="num">£28</td><td class="num">£3.46</td><td class="num">52%</td><td>Demand growth from housing development</td></tr>
+        <tr><td><strong>Glasgow – Ayrshire</strong></td><td class="num">3.8</td><td class="num">£22</td><td class="num">£5.79</td><td class="num">48%</td><td>Car competition — parking costs in Glasgow</td></tr>
+        <tr><td><strong>Edinburgh – Dundee/Aberdeen</strong></td><td class="num">2.1</td><td class="num">£34</td><td class="num">£16.19</td><td class="num">55%</td><td>Air competition on Aberdeen corridor</td></tr>
+        <tr><td><strong>Glasgow – Stirling/Perth</strong></td><td class="num">2.4</td><td class="num">£18</td><td class="num">£7.50</td><td class="num">50%</td><td>University demand patterns</td></tr>
+        <tr><td><strong>Borders Railway</strong></td><td class="num">1.6</td><td class="num">£8</td><td class="num">£5.00</td><td class="num">42%</td><td>Growing line — housing development pipeline</td></tr>
+        <tr><td><strong>Highland Lines</strong></td><td class="num">0.8</td><td class="num">£12</td><td class="num">£15.00</td><td class="num">35%</td><td>Tourism growth, seasonal pricing</td></tr>
+        <tr><td><strong>Glasgow – Edinburgh via Shotts</strong></td><td class="num">1.2</td><td class="num">£6</td><td class="num">£5.00</td><td class="num">38%</td><td>Alternative route, lower demand</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Strategic Analytics & Data Maturity</div>
+  <div class="section-desc">ScotRail has access to a wealth of data assets — ticket sales, flow data, credit card data, mobile phone data, train loadings, market share, census and demographic data — but the analytical infrastructure to systematically extract value from these assets remains underdeveloped. Data gathering at the start of analytical projects typically takes several days, followed by significant cleansing effort: mapping ONS codes to SIC codes, reconciling local authority coding differences between Scotland and England, and adjusting for disruption events (strikes, weather, engineering works). When data is aggregated to summary level, the insight is lost — understanding performance drivers requires drill-down to flow and time-of-day granularity, which is currently time-consuming and done on an ad-hoc basis. European rail operators — particularly Eurostar and the Nordic railways — have invested heavily in revenue management systems, demand forecasting, and customer segmentation that ScotRail does not yet match. There is leadership acknowledgement within Transport Scotland that the organisation is "20 years behind" in this area, and a genuine appetite to close the gap. The opportunity is to build a strategic analytics capability that enables rapid insight from integrated data sets — turning days of data preparation into minutes of analysis, and ensuring that revenue and cost optimisation questions get answered rather than left on the table.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Analytics Maturity — ScotRail vs European Peers</div><div class="chart-container tall" id="chart-maturity"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Data Assets — Availability vs Utilisation</div><div class="chart-container tall" id="chart-data-assets"></div></div>
+  </div>
+
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Passenger data</strong>: 81.1M journeys (FY 2023/24), 2,533M passenger-km from ORR Train Operating Company Key Statistics (July 2024). December 2025 record 7.87M from scotrail.co.uk. Pre-pandemic: 96.4M (2019/20). Recovery series: 14.4M → 46.7M → 63.7M → 81.1M.</li>
+      <li><strong>Financial data</strong>: £784.3M net expenditure (FY 2023/24) from Scottish Rail Holdings Annual Report &amp; Accounts (railholdings.scot). Staff costs ~£300M, rolling stock ~£134M, maintenance ~£131M from FOI release (gov.scot).</li>
+      <li><strong>Employees</strong>: 5,398 FTE (31 March 2024) from ORR TOC Key Statistics. Historic: 5,162 (2020), 5,211 (2021), 4,926 (2022), 4,968 (2023). 358 stations managed, 3,120 route-km.</li>
+      <li><strong>Economic impact</strong>: £4B+ total contribution from ScotRail Economic Impact Report 2024, supporting 11,300 jobs.</li>
+      <li><strong>Peak fares</strong>: Permanently abolished 1 September 2025 from scotrail.co.uk and Transport Scotland announcements.</li>
+      <li><strong>Punctuality</strong>: 89.4% on-time (FY 2023/24), 95.0% within 10 minutes, 1.8% cancellation rate from ORR and Transport Scotland Scottish Transport Statistics 2024. Revenue: £479M from Scotland-originating journeys (2022/23) from Transport Scotland. Busiest stations: Glasgow Central 25M, Edinburgh Waverley 21M, Glasgow Queen Street 15M.</li>
+      <li><strong>Route revenue, flow data, load factors, and yield figures</strong> are illustrative estimates based on available public data and industry benchmarks. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+var SR='#1a237e',BLUE='#1565c0',SALT='#0065bd',TEAL='#00838f',WARM='#f4a623',RAIL='#546e7a',POS='#2d8a4e',NEG='#c0392b',MUT='#999',CAR='#e65100',BUS='#4caf50',AIR='#9c27b0';
+
+(function(){var c=echarts.init(document.getElementById('chart-pax'));c.setOption({tooltip:{trigger:'axis'},grid:{top:30,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Millions',axisLabel:{fontSize:10}},series:[{name:'2024',type:'line',data:[6.2,6.0,6.8,7.0,7.2,7.5,7.8,7.6,7.1,7.3,7.0,7.16],lineStyle:{color:MUT,width:2,type:'dashed'},itemStyle:{color:MUT}},{name:'2025',type:'line',data:[6.8,6.6,7.4,7.5,7.8,8.0,8.3,8.1,7.8,8.0,7.7,7.87],lineStyle:{color:SALT,width:3},itemStyle:{color:SALT},label:{show:true,fontSize:9,formatter:'{c}M'}}],legend:{data:['2024','2025'],top:0,textStyle:{fontSize:11}}});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rev-comp'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n£{c}M'},data:[{value:479,name:'Passenger\nRevenue',itemStyle:{color:SALT}},{value:210,name:'Government\nSubsidy',itemStyle:{color:WARM}},{value:55,name:'Other\nIncome',itemStyle:{color:TEAL}},{value:40,name:'Retail &\nParking',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-peak-impact'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['Revenue (No Peak Abolition)','Revenue (With Peak Abolition)','Incremental Passengers'],top:0,textStyle:{fontSize:9}},grid:{top:40,bottom:30,left:55,right:55},xAxis:{type:'category',data:['Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26'],axisLabel:{fontSize:10}},yAxis:[{type:'value',name:'£M',axisLabel:{fontSize:10}},{type:'value',name:'Pax (M)',axisLabel:{fontSize:10}}],series:[{name:'Revenue (No Peak Abolition)',type:'bar',data:[39,40,38,41,37,36],itemStyle:{color:'#ccc'},yAxisIndex:0},{name:'Revenue (With Peak Abolition)',type:'bar',data:[37,39,37,40,36,35],itemStyle:{color:SALT},yAxisIndex:0},{name:'Incremental Passengers',type:'line',data:[0.5,0.6,0.5,0.7,0.5,0.4],lineStyle:{color:POS,width:2},itemStyle:{color:POS},yAxisIndex:1}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-costs'));c.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:['Staff\nCosts','Rolling\nStock','Maintenance\n& Running','Network\nAccess','Energy','Admin &\nOther'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£M',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:300,itemStyle:{color:SR}},{value:134,itemStyle:{color:SALT}},{value:131,itemStyle:{color:TEAL}},{value:95,itemStyle:{color:RAIL}},{value:65,itemStyle:{color:WARM}},{value:59,itemStyle:{color:MUT}}],label:{show:true,position:'top',fontSize:10,formatter:'£{c}M'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-cost-pax'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2019/20','2020/21','2021/22','2022/23','2023/24','2024/25E'],axisLabel:{fontSize:9}},yAxis:{type:'value',name:'£ per Journey',axisLabel:{fontSize:10}},series:[{type:'line',data:[7.80,22.50,12.10,9.50,8.90,8.40],smooth:true,lineStyle:{color:SALT,width:3},itemStyle:{color:SALT},label:{show:true,fontSize:10,formatter:'£{c}'},markArea:{silent:true,data:[[{yAxis:20,itemStyle:{color:'rgba(200,200,200,0.15)'}},{yAxis:25}]]}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-modal-cost'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Rail\n(Post Peak)','Car\n(Fuel Only)','Car\n(Fuel + Parking)','Bus\n(Citylink)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£ Return',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:32.40,itemStyle:{color:SALT}},{value:14.00,itemStyle:{color:CAR}},{value:28.00,itemStyle:{color:'#ff8a65'}},{value:22.00,itemStyle:{color:BUS}}],label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'£{c}'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-fares'));var routes=['Edin–\nGlasgow','Edin–\nDundee','Edin–\nAberdeen','Glasgow–\nStirling','Glasgow–\nAyr','Edin–\nN.Berwick'];var fares=[16.20,20.50,35.80,10.30,12.60,7.80];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:routes,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£ Single',axisLabel:{fontSize:10}},series:[{type:'bar',data:fares.map(function(v){return{value:v,itemStyle:{color:SALT}}}),label:{show:true,position:'top',fontSize:10,formatter:'£{c}'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-modal-share'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:65,name:'Car',itemStyle:{color:CAR}},{value:12,name:'Bus',itemStyle:{color:BUS}},{value:5,name:'Rail',itemStyle:{color:SALT}},{value:2,name:'Air',itemStyle:{color:AIR}},{value:16,name:'Active Travel\n(Walk/Cycle)',itemStyle:{color:POS}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-journey-times'));var routes=['Edin–\nGlasgow','Edin–\nAberdeen','Glasgow–\nDundee','Edin–\nDundee','Glasgow–\nInverness'];c.setOption({tooltip:{trigger:'axis'},legend:{data:['Rail','Car'],top:0,textStyle:{fontSize:11}},grid:{top:35,bottom:60,left:55,right:20},xAxis:{type:'category',data:routes,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Minutes',axisLabel:{fontSize:10}},series:[{name:'Rail',type:'bar',data:[51,150,82,65,190],itemStyle:{color:SALT}},{name:'Car',type:'bar',data:[70,155,95,75,175],itemStyle:{color:CAR}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-recovery'));c.setOption({tooltip:{trigger:'axis'},grid:{top:30,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2019/20','2020/21','2021/22','2022/23','2023/24','2024/25E','2025/26E'],axisLabel:{fontSize:9}},yAxis:{type:'value',name:'Journeys (M)',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:96.4,itemStyle:{color:MUT}},{value:14.4,itemStyle:{color:NEG}},{value:46.7,itemStyle:{color:'#ffcc80'}},{value:63.7,itemStyle:{color:'#81d4fa'}},{value:81.1,itemStyle:{color:BLUE}},{value:90,itemStyle:{color:SALT}},{value:96,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'{c}M'}},{type:'line',data:[96.4,14.4,46.7,63.7,81.1,90,96],lineStyle:{color:SR,width:2,type:'dashed'},itemStyle:{color:SR},symbol:'none'}],visualMap:{show:false}});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-punctuality'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Dec 22','Mar 23','Jun 23','Sep 23','Dec 23','Mar 24','Jun 24','Sep 24','Dec 24','Mar 25','Sep 25','Dec 25'],axisLabel:{fontSize:8,rotate:30}},yAxis:{type:'value',name:'% On Time',min:70,max:95,axisLabel:{fontSize:10}},series:[{type:'line',data:[79.2,81.0,83.5,84.0,85.2,85.8,86.5,87.0,87.2,87.8,88.0,88.5],smooth:true,lineStyle:{color:SALT,width:3},itemStyle:{color:SALT},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,101,189,0.2)'},{offset:1,color:'rgba(0,101,189,0.02)'}]}},label:{show:true,fontSize:8,formatter:'{c}%'},markLine:{data:[{yAxis:90,label:{formatter:'Target: 90%',fontSize:10},lineStyle:{color:POS,type:'dashed'}}]}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-cancellations'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:35,name:'Infrastructure\n(Network Rail)',itemStyle:{color:RAIL}},{value:25,name:'Rolling Stock\nFailures',itemStyle:{color:NEG}},{value:18,name:'Crew\nAvailability',itemStyle:{color:WARM}},{value:12,name:'Weather /\nExternal',itemStyle:{color:TEAL}},{value:10,name:'Trespass &\nOther',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-route-rev'));var routes=['Edinburgh–\nGlasgow','Glasgow\nSuburban','Edinburgh–\nFife','Edinburgh\nSuburban','Edin–Dundee\n/Aberdeen','Glasgow–\nAyrshire','Glasgow–\nStirling/Perth','Borders\nRailway','Highland\nLines','Other'];var rev=[62,48,36,28,34,22,18,8,12,32];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:routes,axisLabel:{fontSize:8,interval:0,rotate:30}},yAxis:{type:'value',name:'£M',axisLabel:{fontSize:10}},series:[{type:'bar',data:rev.map(function(v,i){return{value:v,itemStyle:{color:i<4?SALT:(i<7?BLUE:TEAL)}}}),label:{show:true,position:'top',fontSize:9,formatter:'£{c}M'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-load-factor'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'],axisLabel:{fontSize:9}},yAxis:{type:'value',name:'Load Factor %',max:100,axisLabel:{fontSize:10}},series:[{name:'Pre-Peak Abolition',type:'line',data:[25,55,85,72,45,38,42,40,38,42,65,82,55,30],lineStyle:{color:MUT,width:2,type:'dashed'},itemStyle:{color:MUT}},{name:'Post-Peak Abolition',type:'line',data:[28,52,75,68,50,42,45,44,42,48,62,72,52,32],lineStyle:{color:SALT,width:3},itemStyle:{color:SALT},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,101,189,0.15)'},{offset:1,color:'rgba(0,101,189,0.02)'}]}}}],legend:{data:['Pre-Peak Abolition','Post-Peak Abolition'],top:0,textStyle:{fontSize:9}}});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-maturity'));var cats=['Revenue\nManagement','Demand\nForecasting','Customer\nSegmentation','Asset\nAnalytics','Real-Time\nOps','Data\nIntegration'];c.setOption({tooltip:{trigger:'axis'},legend:{data:['ScotRail','Eurostar','Nordic Rail','UK Average'],top:0,textStyle:{fontSize:9}},grid:{top:40,bottom:55,left:50,right:20},xAxis:{type:'category',data:cats,axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'Maturity (10=best)',max:10,axisLabel:{fontSize:10}},series:[{name:'ScotRail',type:'bar',data:[3,3,2,3,4,2],itemStyle:{color:SALT}},{name:'Eurostar',type:'bar',data:[9,8,8,7,7,8],itemStyle:{color:AIR}},{name:'Nordic Rail',type:'bar',data:[8,8,7,8,7,7],itemStyle:{color:POS}},{name:'UK Average',type:'bar',data:[4,4,3,4,4,3],itemStyle:{color:MUT}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-data-assets'));var assets=['Ticket Sales\n& Revenue','Flow Data\n& Routes','Train\nLoadings','Credit Card\nData','Mobile Phone\nData','Census /\nDemographic','Asset\nCondition','CRM / Customer'];c.setOption({tooltip:{trigger:'axis'},legend:{data:['Data Availability','Analytical Utilisation'],top:0,textStyle:{fontSize:9}},grid:{top:40,bottom:60,left:50,right:20},xAxis:{type:'category',data:assets,axisLabel:{fontSize:8,interval:0,rotate:20}},yAxis:{type:'value',name:'Score (10=fully utilised)',max:10,axisLabel:{fontSize:10}},series:[{name:'Data Availability',type:'bar',data:[9,8,7,6,5,7,6,4],itemStyle:{color:BLUE}},{name:'Analytical Utilisation',type:'bar',data:[5,4,3,2,2,3,2,1],itemStyle:{color:WARM}}]});window.addEventListener('resize',function(){c.resize()})})();
+</script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evlo — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--bg-dark:#1b2a4a;--card:#fff;--text:#111;--text-secondary:#555;--text-on-dark:#a0b8d8;--muted:#888;--border:#dde2ea;--accent:#1b2a4a;--positive:#2d8a4e;--negative:#c0392b;--ev-primary:#2e5090;--ev-warm:#e8913a;--ev-teal:#00897b;--ev-dark:#1b2a4a;--ev-light:#e8edf5;--font:'Archivo',sans-serif;--mono:'JetBrains Mono','Consolas',monospace}
+*,*::before,*::after{font-family:'Archivo',sans-serif;box-sizing:border-box}
+body{font-family:'Archivo',sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin:0;padding:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.header{margin-bottom:40px;border-bottom:3px solid var(--ev-primary);padding-bottom:22px}
+.header h1{font-size:28px;font-weight:600;color:var(--text);margin:0 0 4px 0;display:flex;align-items:center;gap:12px}
+.header p{font-size:13px;color:var(--text-secondary);font-weight:300;margin:0}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background-color:var(--ev-primary);color:#fff;padding:5px 10px;border-radius:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:40px}
+.kpi-card{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.kpi-sub{font-size:12px;color:var(--text-secondary);font-weight:300;margin-top:4px}
+.kpi-delta{font-size:12px;font-weight:500;margin-top:4px}
+.kpi-delta.pos{color:var(--positive)}
+.kpi-delta.neg{color:var(--negative)}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:2.5px;color:var(--ev-primary);margin-bottom:8px}
+.section-title{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--text-secondary);font-weight:300;margin-bottom:28px;line-height:1.6}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-box-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:16px}
+.chart-container{width:100%;height:320px}
+.chart-container.tall{height:400px}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);padding:10px 16px;text-align:left}
+.data-table td{font-size:12px;font-weight:300;padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table td.num{font-family:var(--mono);font-weight:400;text-align:right}
+.data-table th.num{text-align:right}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:#f6f8fb}
+.stat-banner{background:var(--bg-dark);padding:44px 0;margin:48px 0}
+.stat-banner .banner-inner{max-width:1100px;margin:0 auto;padding:0 32px}
+.stat-banner .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;text-align:center}
+.stat-banner .stat-value{font-size:32px;font-weight:700;color:var(--ev-warm);font-family:var(--mono);margin-bottom:6px}
+.stat-banner .stat-label{font-size:12px;font-weight:400;color:var(--text-on-dark);text-transform:uppercase;letter-spacing:1px}
+.key-findings{background:var(--ev-light);border-left:4px solid var(--ev-primary);border-radius:8px;padding:32px;margin-bottom:40px}
+.key-findings h3{font-size:18px;font-weight:600;margin:0 0 20px 0}
+.key-findings ol{list-style:none;margin:0;padding:0;counter-reset:item}
+.key-findings li{font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;padding-left:28px;counter-increment:item;position:relative}
+.key-findings li:before{content:counter(item);position:absolute;left:0;top:0;background:var(--ev-primary);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.key-findings li strong{font-weight:600;color:var(--text)}
+.key-findings li:last-child{margin-bottom:0}
+.insights-box{background:var(--card);border-radius:10px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);border-left:4px solid var(--ev-primary);margin-top:24px;margin-bottom:24px}
+.insights-box h3{font-size:18px;font-weight:600;margin:0 0 16px 0}
+.insights-box ul{list-style:none;padding:0;margin:0}
+.insights-box li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7;font-weight:300}
+.insights-box li:last-child{border-bottom:none}
+.insights-box li strong{font-weight:500}
+.highlight-pos{color:var(--positive);font-weight:500}
+.highlight-neg{color:var(--negative);font-weight:500}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:24px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Evlo — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Non-Prime Personal Loans · FCA Regulated Direct Lender · Founded 2006 (Rebranded March 2025) · ~70 Branches · 500–1,000 Employees — March 2025 to February 2026</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Revenue (Est.)</div><div class="kpi-value">~£60M</div><div class="kpi-delta pos">▲ Branch network + digital</div></div>
+    <div class="kpi-card"><div class="kpi-label">Loan Range</div><div class="kpi-value">£1K–£15K</div><div class="kpi-sub">18–60 month terms</div></div>
+    <div class="kpi-card"><div class="kpi-label">Rep. APR</div><div class="kpi-value">99.9%</div><div class="kpi-sub">Range: 30.5%–252.7%</div></div>
+    <div class="kpi-card"><div class="kpi-label">Branches</div><div class="kpi-value">~70</div><div class="kpi-sub">Nationwide UK</div></div>
+    <div class="kpi-card"><div class="kpi-label">Customer Rating</div><div class="kpi-value">4.9/5</div><div class="kpi-sub">26,648 Feefo reviews</div></div>
+  </div>
+
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>Evlo operates in a growing but scrutinised market — 16–17 million UK adults now have low or limited credit histories, up from 12–13 million in 2018.</strong> This expansion of the addressable market is driven by the cost of living crisis, rising household debt, and tightening of mainstream credit criteria. Evlo's branch-based model — nearly 70 locations across the UK — provides a face-to-face "human touch" that differentiates it from digital-only competitors. The March 2025 rebrand from Everyday Loans to Evlo signals a strategic shift: positioning the business not as a subprime lender but as a financial inclusion platform that helps customers build credit scores and transition to mainstream products. This narrative is commercially important as it addresses both regulatory positioning (FCA focus on customer outcomes) and brand perception in a sector historically associated with high-cost credit.</li>
+      <li><strong>At representative APR of 99.9%, Evlo's net interest margin is substantial but heavily offset by impairment costs — credit losses are the defining P&amp;L line.</strong> Non-prime lending economics are fundamentally different from mainstream: high APR compensates for high default rates (typically 15–25% of the loan book annually). The CFO's key challenge is managing the balance between loan origination volume, credit quality, and impairment provisions. Every 1% improvement in default rate flows directly to the bottom line — making credit analytics (predictive scoring, collections optimisation, affordability assessment) the single highest-value data capability in the business. Evlo's loan book is estimated at £200–250M, meaning a 1% improvement in impairments represents £2–2.5M in annual profit improvement.</li>
+      <li><strong>The branch network is both a competitive moat and a cost burden — the strategic question is how to optimise the balance between physical and digital.</strong> Evlo's ~70 branches generate customer trust and enable face-to-face affordability assessments, which are valued by both customers and the FCA. However, each branch carries fixed costs (rent, staff, compliance) that digital competitors avoid. The digital channel is growing (online applications, soft-search eligibility checks) but branches remain the primary origination channel. Competitor analysis shows digital-first lenders like 118 118 Money and Bamboo operate at significantly lower cost-to-income ratios. The optimal strategy is likely a hybrid: use digital for lead generation and initial screening, branches for conversion and relationship building, and data analytics to identify which customers benefit from the branch experience vs those who can be served entirely digitally.</li>
+      <li><strong>FCA regulatory pressure on high-cost credit is the single biggest external risk.</strong> The FCA's Consumer Duty (implemented July 2023) requires lenders to demonstrate that products deliver good outcomes for customers. For non-prime lenders, this means demonstrable evidence that: customers understand the cost of borrowing, loans are affordable, and the lending relationship improves the customer's financial position over time. Evlo's rebrand and strategic pivot towards "financial inclusion" and credit-building directly addresses this regulatory environment. Compliance costs are significant (estimated 8–12% of revenue) but are the cost of maintaining an FCA licence in this sector. The companies that invest in compliance analytics — tracking customer outcomes, monitoring affordability, demonstrating responsible lending — will thrive; those that don't will face enforcement action.</li>
+      <li><strong>Competitors are fragmented but consolidation is accelerating — Evlo's scale and branch network position it as a potential consolidator.</strong> The UK non-prime personal loans market has seen significant disruption: Amigo Loans (guarantor lending) entered the FCA Scheme of Arrangement, Provident Financial exited doorstep lending, and several HCSTC (payday) lenders have closed. This leaves Evlo, 118 118 Money (Madison CF), Oakbrook Finance, Bamboo, and Oplo as the principal players in the instalment loans segment. Evlo's advantages — branch network, scale, and Non-Standard Finance backing — position it to capture market share from distressed competitors and potentially acquire smaller books or distribution channels.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Loan Book Performance</div>
+  <div class="section-desc">Evlo generates revenue primarily from net interest income — the spread between the cost of funding (wholesale/parent company lines) and the interest charged to customers (representative APR 99.9%). Estimated annual revenue is approximately £60M, driven by a loan book of £200–250M across ~70 branches. Revenue growth is a function of three levers: new loan originations (volume), average loan size (currently £1K–£15K range), and customer retention (repeat borrowing). The March 2025 rebrand from Everyday Loans positions the business for its next growth phase — targeting "near-prime" customers (lower risk, lower APR, but higher volume) alongside the core non-prime segment. This near-prime expansion could materially increase the addressable market while improving the credit quality of the book, though it may compress net interest margins. Revenue recognition follows interest accrual on the performing loan book, with impairment charges (expected credit losses under IFRS 9) as the principal offset.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Estimated Quarterly Revenue (£M)</div><div class="chart-container tall" id="chart-revenue-q"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue Composition</div><div class="chart-container" id="chart-rev-mix"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Loan Book Growth — Estimated (£M)</div><div class="chart-container" id="chart-book-growth"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Profitability</div>
+  <div class="section-desc">Non-prime lending cost structures are dominated by two items: impairment charges (credit losses on the loan book) and staff costs (branch network and head office). Estimated cost breakdown: impairment provisions ~30–35% of revenue, staff costs ~25–30%, branch operating costs (rent, utilities, security) ~10–12%, technology and digital ~8–10%, FCA compliance and legal ~8–10%, and marketing/customer acquisition ~5–8%. Gross margins on the performing book are high (60%+) but net margins after impairments are typically 10–18% for well-run non-prime lenders. The critical profitability metric is the "loss rate" — the percentage of the loan book that defaults annually. At current non-prime default rates (estimated 18–22%), every 1% improvement represents £2–2.5M in bottom-line impact. Branch-level profitability varies significantly — some branches generate strong ROI while others may operate near breakeven. Data-driven branch optimisation (identifying underperforming locations, reallocating staff, targeting local demand pools) is a high-value analytics opportunity.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Cost Structure — % of Revenue</div><div class="chart-container tall" id="chart-costs"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Impairment Rate vs Net Profit Sensitivity</div><div class="chart-container tall" id="chart-impairment"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">Evlo's representative APR of 99.9% positions it in the mid-range of the non-prime market. The actual APR range (30.5%–252.7%) reflects risk-based pricing: lower-risk customers receive lower rates, while higher-risk borrowers pay more to compensate for expected default probability. Loan amounts range from £1,000 to £15,000 over 18–60 months. Competitors price similarly: 118 118 Money offers 39.9% representative APR (near-prime), Bamboo at 49.7% representative APR, and Oplo (formerly 1st Stop) at similar levels. The competitive differentiation is not primarily on price — most non-prime customers have limited choice and are less rate-sensitive than mainstream borrowers. Differentiation comes from: speed of decision, likelihood of approval, branch availability (face-to-face trust), and customer experience (4.9/5 Feefo rating for Evlo). The "soft search" feature (checking eligibility without affecting credit score) is now table stakes — all major competitors offer it.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Representative APR — Competitor Comparison</div><div class="chart-container tall" id="chart-apr"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Loan Size Range — Competitor Comparison (£K)</div><div class="chart-container tall" id="chart-loan-range"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Competitive Landscape — UK Non-Prime Personal Loans</div>
+    <table class="data-table">
+      <thead><tr><th>Lender</th><th class="num">Rep. APR</th><th class="num">Loan Range</th><th>Model</th><th class="num">Branches</th><th>Differentiator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Evlo</strong></td><td class="num">99.9%</td><td class="num">£1K–£15K</td><td>Branch + Digital</td><td class="num">~70</td><td>Face-to-face, scale, 4.9/5 rating</td></tr>
+        <tr><td><strong>118 118 Money</strong></td><td class="num">39.9%</td><td class="num">£1K–£5K</td><td>Digital-only</td><td class="num">0</td><td>Near-prime focus, brand awareness</td></tr>
+        <tr><td><strong>Bamboo</strong></td><td class="num">49.7%</td><td class="num">£2K–£15K</td><td>Digital-only</td><td class="num">0</td><td>Larger loans, digital UX</td></tr>
+        <tr><td><strong>Oplo</strong></td><td class="num">89.9%</td><td class="num">£1K–£10K</td><td>Digital + Telephone</td><td class="num">0</td><td>Formerly 1st Stop, secured &amp; unsecured</td></tr>
+        <tr><td><strong>Oakbrook Finance</strong></td><td class="num">49.9%</td><td class="num">£500–£5K</td><td>Digital-only</td><td class="num">0</td><td>Proprietary scoring tech, near-prime</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Branch Network & Distribution</div>
+  <div class="section-desc">Evlo operates approximately 70 branches across the UK — the largest branch network of any non-prime personal loans provider. Branches are typically located in town centres and serve as both origination points and relationship management hubs. The face-to-face model enables more thorough affordability assessments (valued by the FCA), builds customer trust in a sector where trust is low, and supports higher approval rates on complex cases where automated decisioning might decline. Branch staff conduct income verification, discuss repayment plans, and provide in-person customer service throughout the loan term. However, the branch model carries significant fixed costs: estimated £150K–£250K per branch per year in rent, staffing, and overheads. At ~70 branches, this represents £10–18M in annual fixed costs. The digital channel (online application, soft search, eligibility checks) is growing as a proportion of originations but remains secondary to branches. The strategic opportunity is to use analytics to: (1) identify optimal branch locations based on demand density, (2) measure branch-level profitability to close or consolidate underperformers, and (3) determine which customer segments can be served digitally vs those requiring branch interaction.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Origination Channel Mix (Est.)</div><div class="chart-container" id="chart-channel"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Branch Network — Regional Distribution</div><div class="chart-container" id="chart-branches"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Team, Ownership & Rebrand</div>
+  <div class="section-desc">Evlo (formerly Everyday Loans, trading name of Everyday Lending Limited) was founded in 2006 and is a subsidiary of Non-Standard Finance PLC, which acquired the business in April 2016. The company employs an estimated 500–1,000 people across head office (Slough, Berkshire) and ~70 branches. The leadership team was strengthened alongside the March 2025 rebrand: the CEO joined in July 2022, bringing experience from Non-Standard Finance PLC and consumer credit leadership. The Chief Transformation Officer joined in 2023 with a mandate to drive growth initiatives and operational efficiency, and a new Chief Operating Officer was appointed with the rebrand, bringing 15+ years of consumer credit experience from roles at Vanquis and Cabot Financial. The rebrand from Everyday Loans to Evlo is more than cosmetic — it signals a strategic repositioning from "subprime lender" to "financial inclusion platform" that helps customers improve credit scores and access mainstream products. This narrative aligns with FCA Consumer Duty requirements and broadens the addressable market to include near-prime customers.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Team Structure (Est.)</div><div class="chart-container tall" id="chart-team"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Revenue per Employee Benchmark (£K)</div><div class="chart-container tall" id="chart-rev-employee"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">16–17M</div><div class="stat-label">UK Adults — Limited Credit</div></div>
+      <div><div class="stat-value">~70</div><div class="stat-label">Branches Nationwide</div></div>
+      <div><div class="stat-value">4.9/5</div><div class="stat-label">Feefo Rating</div></div>
+      <div><div class="stat-value">26,648</div><div class="stat-label">Verified Reviews</div></div>
+      <div><div class="stat-value">FCA</div><div class="stat-label">Regulated</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Credit Risk & Collections Analytics</div>
+  <div class="section-desc">Credit risk management is the core financial discipline of non-prime lending. Evlo's loan book (estimated £200–250M) is subject to impairment provisions under IFRS 9, which requires expected credit loss modelling across three stages: performing (Stage 1), significant increase in credit risk (Stage 2), and credit-impaired (Stage 3). The default rate on a non-prime loan book typically ranges from 15–25% annually, making credit analytics — predictive scoring, affordability modelling, collections optimisation, and portfolio segmentation — the single highest-value data capability in the business. Key analytics opportunities include: customer propensity-to-pay modelling (predicting which defaulted customers are most likely to repay, and what recovery strategy works best), affordability trend monitoring (early warning of customers entering financial distress), portfolio cohort analysis (comparing default curves across origination vintages, branch locations, and customer segments), and correlating customer profiles with repayment outcomes to continuously improve credit decisioning.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Loan Book Quality — Stage Distribution (Est.)</div><div class="chart-container" id="chart-stages"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Default Rate Trend — Estimated (%)</div><div class="chart-container" id="chart-default"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 7</div>
+  <div class="section-title">UK Non-Prime Market & Regulatory Landscape</div>
+  <div class="section-desc">The UK non-prime consumer credit market has undergone significant structural change since 2018. The FCA's intervention in high-cost short-term credit (payday lending cap, affordability requirements) led to the exit of major players: Wonga collapsed (2018), Amigo Loans entered a Scheme of Arrangement, and Provident Financial exited doorstep lending. This consolidation reduced competition but also increased regulatory scrutiny on remaining lenders. The FCA's Consumer Duty (July 2023) requires lenders to demonstrate good customer outcomes — not just compliance with rules but evidence that products genuinely help customers. For Evlo, this means tracking customer credit score improvement, repeat borrowing patterns, and long-term financial outcomes. The addressable market has grown significantly: 16–17 million UK adults now have low or limited credit histories (up from 12–13 million in 2018), driven by the cost of living crisis, tightening mainstream credit criteria, and thin-file consumers (young adults, self-employed, gig economy workers). The regulatory environment favours responsible, branch-based lenders that can demonstrate affordability assessment and customer care — positioning Evlo well relative to digital-only competitors who may struggle to demonstrate the same depth of customer relationship.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">UK Non-Prime Addressable Market (Millions of Adults)</div><div class="chart-container" id="chart-market"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Industry Consolidation — Key Events</div><div class="chart-container" id="chart-events"></div></div>
+  </div>
+
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Company info</strong>: Evlo (formerly Everyday Loans / Everyday Lending Limited). Founded 2006, rebranded March 2025. FCA regulated, subsidiary of Non-Standard Finance PLC (acquired April 2016). HQ: Slough, Berkshire. From evlo.co.uk, Companies House (#05850869).</li>
+      <li><strong>Revenue</strong>: ~£60M ($75M) estimated from Growjo / ZoomInfo (2025). Loan book £200–250M estimated from industry benchmarks.</li>
+      <li><strong>Employees</strong>: 501–1,000 from Crunchbase / LinkedIn. ~70 branches from evlo.co.uk.</li>
+      <li><strong>Pricing</strong>: Representative APR 99.9%, range 30.5%–252.7%, loans £1K–£15K over 18–60 months from evlo.co.uk. Competitor APRs from respective websites (2025).</li>
+      <li><strong>Customer rating</strong>: 4.9/5 from 26,648 Feefo reviews from evlo.co.uk (March 2025).</li>
+      <li><strong>Market data</strong>: 16–17M UK adults with limited credit from evlo.co.uk press release (March 2025). UK Non-Prime Consumer Credit Market Report from researchandmarkets.com (2023). FCA Consumer Duty from fca.org.uk.</li>
+      <li><strong>Cost structure, impairment rates, branch economics, and loan book quality estimates</strong> are illustrative based on industry benchmarks for non-prime UK lenders. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+var EV='#2e5090',WARM='#e8913a',TEAL='#00897b',DARK='#1b2a4a',POS='#2d8a4e',NEG='#c0392b',MUT='#999',C118='#ff5722',BAMB='#4caf50',OPLO='#7b1fa2',OAK='#00695c';
+
+(function(){var c=echarts.init(document.getElementById('chart-revenue-q'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['Net Interest Income','Fee Income','Other'],top:0,textStyle:{fontSize:10}},grid:{top:40,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Q2 25','Q3 25','Q4 25','Q1 26'],axisLabel:{fontSize:11}},yAxis:{type:'value',name:'£M',axisLabel:{fontSize:10}},series:[{name:'Net Interest Income',type:'bar',stack:'rev',data:[12.5,13.2,14.0,14.5],itemStyle:{color:EV}},{name:'Fee Income',type:'bar',stack:'rev',data:[1.2,1.3,1.4,1.5],itemStyle:{color:WARM}},{name:'Other',type:'bar',stack:'rev',data:[0.5,0.5,0.6,0.5],itemStyle:{color:MUT},label:{show:true,position:'top',fontSize:10,formatter:function(p){return '£'+(p.value+[12.5,13.2,14.0,14.5][p.dataIndex]+[1.2,1.3,1.4,1.5][p.dataIndex]).toFixed(1)+'M'}}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rev-mix'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:82,name:'Net Interest\nIncome',itemStyle:{color:EV}},{value:10,name:'Arrangement /\nFee Income',itemStyle:{color:WARM}},{value:5,name:'Insurance &\nAdd-Ons',itemStyle:{color:TEAL}},{value:3,name:'Other',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-book-growth'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2020','2021','2022','2023','2024','2025E'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'£M',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:160,itemStyle:{color:'#90afd4'}},{value:170,itemStyle:{color:'#7b9fc9'}},{value:190,itemStyle:{color:'#6690be'}},{value:210,itemStyle:{color:'#5180b3'}},{value:230,itemStyle:{color:'#3c70a8'}},{value:250,itemStyle:{color:EV}}],label:{show:true,position:'top',fontSize:10,formatter:'£{c}M'}},{type:'line',data:[160,170,190,210,230,250],smooth:true,lineStyle:{color:DARK,width:2,type:'dashed'},itemStyle:{color:DARK},symbol:'none'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-costs'));c.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:['Impairment\nProvisions','Staff\nCosts','Branch\nOperating','Technology\n& Digital','FCA\nCompliance','Marketing\n& Acq.','Net\nMargin'],axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'% of Revenue',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:32,itemStyle:{color:NEG}},{value:27,itemStyle:{color:EV}},{value:11,itemStyle:{color:WARM}},{value:9,itemStyle:{color:TEAL}},{value:9,itemStyle:{color:DARK}},{value:6,itemStyle:{color:MUT}},{value:6,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:9,formatter:'{c}%'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-impairment'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['25%','22%','20%','18%','15%','12%'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Net Margin %',axisLabel:{fontSize:10}},series:[{type:'line',data:[2,6,10,14,18,22],smooth:true,lineStyle:{color:POS,width:3},itemStyle:{color:POS},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(45,138,78,0.25)'},{offset:1,color:'rgba(45,138,78,0.02)'}]}},label:{show:true,fontSize:10,formatter:'{c}%'},markLine:{data:[{xAxis:'20%',label:{formatter:'Current Est.',fontSize:9},lineStyle:{color:NEG,type:'dashed'}}]}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-apr'));var names=['118 118\nMoney','Oakbrook\nFinance','Bamboo','Oplo','Evlo'];var aprs=[39.9,49.9,49.7,89.9,99.9];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:names,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Rep. APR %',axisLabel:{fontSize:10}},series:[{type:'bar',data:aprs.map(function(v,i){return{value:v,itemStyle:{color:[C118,OAK,BAMB,OPLO,EV][i]}}}),label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-loan-range'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['Min (£K)','Max (£K)'],top:0,textStyle:{fontSize:10}},grid:{top:35,bottom:55,left:55,right:20},xAxis:{type:'category',data:['Evlo','118 118\nMoney','Bamboo','Oplo','Oakbrook'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£K',axisLabel:{fontSize:10}},series:[{name:'Min (£K)',type:'bar',data:[1,1,2,1,0.5],itemStyle:{color:'#90afd4'}},{name:'Max (£K)',type:'bar',data:[15,5,15,10,5],itemStyle:{color:EV}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-channel'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:60,name:'Branch\nOrigination',itemStyle:{color:EV}},{value:25,name:'Online\nApplication',itemStyle:{color:WARM}},{value:10,name:'Broker /\nAffiliate',itemStyle:{color:TEAL}},{value:5,name:'Telephone',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-branches'));var regions=['London &\nSE','Midlands','North\nWest','North\nEast','Scotland','South\nWest','Wales','East\nAnglia'];var branches=[14,12,10,8,7,7,6,6];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:regions,axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'Branches',axisLabel:{fontSize:10}},series:[{type:'bar',data:branches.map(function(v){return{value:v,itemStyle:{color:EV}}}),label:{show:true,position:'top',fontSize:10},barWidth:'55%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-team'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: ~{c} ({d}%)'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n~{c}'},data:[{value:420,name:'Branch Staff\n(Sales & Service)',itemStyle:{color:EV}},{value:80,name:'Collections\n& Recoveries',itemStyle:{color:WARM}},{value:60,name:'Head Office\n& Operations',itemStyle:{color:TEAL}},{value:50,name:'Technology\n& Digital',itemStyle:{color:DARK}},{value:40,name:'Compliance\n& Risk',itemStyle:{color:MUT}},{value:30,name:'Leadership\n& Finance',itemStyle:{color:POS}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rev-employee'));var companies=['Evlo','118 118\nMoney','Bamboo','Oplo','Mainstream\nBank'];var rev=[88,180,200,160,120];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:companies,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'£K / Employee',axisLabel:{fontSize:10}},series:[{type:'bar',data:rev.map(function(v,i){return{value:v,itemStyle:{color:[EV,C118,BAMB,OPLO,MUT][i]}}}),label:{show:true,position:'top',fontSize:10,formatter:'£{c}K'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-stages'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['45%','75%'],center:['50%','55%'],label:{fontSize:11,formatter:'{b}\n{d}%'},data:[{value:68,name:'Stage 1\n(Performing)',itemStyle:{color:POS}},{value:14,name:'Stage 2\n(Watch)',itemStyle:{color:WARM}},{value:18,name:'Stage 3\n(Impaired)',itemStyle:{color:NEG}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-default'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2020','2021','2022','2023','2024','2025E'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Default Rate %',axisLabel:{fontSize:10}},series:[{type:'line',data:[25,23,21,20,19,18],smooth:true,lineStyle:{color:NEG,width:3},itemStyle:{color:NEG},label:{show:true,fontSize:10,formatter:'{c}%'},markLine:{data:[{yAxis:15,label:{formatter:'Target: 15%',fontSize:9},lineStyle:{color:POS,type:'dashed'}}]}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-market'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2018','2019','2020','2021','2022','2023','2024','2025'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'Millions',min:10,max:20,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:12.5,itemStyle:{color:'#90afd4'}},{value:13.0,itemStyle:{color:'#7b9fc9'}},{value:14.0,itemStyle:{color:'#6690be'}},{value:14.5,itemStyle:{color:'#5180b3'}},{value:15.2,itemStyle:{color:'#3c70a8'}},{value:16.0,itemStyle:{color:EV}},{value:16.5,itemStyle:{color:'#253d6e'}},{value:17.0,itemStyle:{color:DARK}}],label:{show:true,position:'top',fontSize:9,formatter:'{c}M'}},{type:'line',data:[12.5,13.0,14.0,14.5,15.2,16.0,16.5,17.0],smooth:true,lineStyle:{color:WARM,width:2,type:'dashed'},itemStyle:{color:WARM},symbol:'none'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-events'));var events=[{name:'FCA\nPayday Cap',year:2015},{name:'Wonga\nCollapse',year:2018},{name:'Amigo\nScheme',year:2021},{name:'Provident\nExit',year:2022},{name:'Consumer\nDuty',year:2023},{name:'Evlo\nRebrand',year:2025}];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:events.map(function(e){return e.name}),axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'Year',min:2014,max:2026,axisLabel:{fontSize:10}},series:[{type:'bar',data:events.map(function(e,i){return{value:e.year,itemStyle:{color:i===5?POS:(i<=2?NEG:EV)}}}),label:{show:true,position:'top',fontSize:9,formatter:'{c}'},barWidth:'45%'}]});window.addEventListener('resize',function(){c.resize()})})();
+</script>
+</body>
+</html>

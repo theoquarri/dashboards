@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunsave — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg:          #f5f8f4;
+  --bg-dark:     #1a2e1a;
+  --card:        #ffffff;
+  --text:        #111111;
+  --text-secondary: #555555;
+  --text-on-dark: #a8c8a0;
+  --muted:       #888888;
+  --border:      #dce5d8;
+  --accent:      #1a2e1a;
+  --accent-green:#2e7d32;
+  --accent-sun:  #f9a825;
+  --positive:    #2d8a4e;
+  --negative:    #c0392b;
+  --plus:        #2e7d32;
+  --standard:    #f9a825;
+  --battery:     #1565c0;
+  --install:     #6d4c41;
+  --font:        'Archivo', sans-serif;
+  --mono:        'JetBrains Mono', 'Consolas', monospace;
+}
+*, *::before, *::after { font-family: 'Archivo', sans-serif; box-sizing: border-box; }
+body { font-family: 'Archivo', sans-serif; font-weight: 300; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+.header { margin-bottom: 40px; border-bottom: 3px solid var(--accent-green); padding-bottom: 22px; }
+.header h1 { font-size: 28px; font-weight: 600; color: var(--text); margin: 0 0 4px 0; display: flex; align-items: center; gap: 12px; }
+.header p { font-size: 13px; color: var(--text-secondary); font-weight: 300; margin: 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; background-color: var(--accent-green); color: white; padding: 5px 10px; border-radius: 4px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.kpi-card { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.kpi-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); font-weight: 300; margin-top: 4px; }
+.kpi-delta { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.kpi-delta.pos { color: var(--positive); }
+.kpi-delta.neg { color: var(--negative); }
+.section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2.5px; color: var(--accent-green); margin-bottom: 8px; }
+.section-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.section-desc { font-size: 14px; color: var(--text-secondary); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
+.section-divider { height: 1px; background: var(--border); margin: 48px 0; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-grid.full { grid-template-columns: 1fr; }
+.chart-box { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.chart-box-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
+.chart-container { width: 100%; height: 320px; }
+.chart-container.tall { height: 400px; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.data-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 2px solid var(--border); padding: 10px 16px; text-align: left; }
+.data-table td { font-size: 12px; font-weight: 300; padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+.data-table td.num { font-family: var(--mono); font-weight: 400; text-align: right; }
+.data-table th.num { text-align: right; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover { background: #f6f9f5; }
+.stat-banner { background: var(--bg-dark); padding: 44px 0; margin: 48px 0; }
+.stat-banner .banner-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.stat-banner .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; text-align: center; }
+.stat-banner .stat-value { font-size: 32px; font-weight: 700; color: var(--accent-sun); font-family: var(--mono); margin-bottom: 6px; }
+.stat-banner .stat-label { font-size: 12px; font-weight: 400; color: var(--text-on-dark); text-transform: uppercase; letter-spacing: 1px; }
+.key-findings { background: #e8f5e9; border-left: 4px solid var(--accent-green); border-radius: 8px; padding: 32px; margin-bottom: 40px; }
+.key-findings h3 { font-size: 18px; font-weight: 600; margin: 0 0 20px 0; }
+.key-findings ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.key-findings li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; padding-left: 28px; counter-increment: item; position: relative; }
+.key-findings li:before { content: counter(item); position: absolute; left: 0; top: 0; background: var(--accent-green); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.key-findings li strong { font-weight: 600; color: var(--text); }
+.key-findings li:last-child { margin-bottom: 0; }
+.insights-box { background: var(--card); border-radius: 10px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-left: 4px solid var(--accent-green); margin-top: 24px; margin-bottom: 24px; }
+.insights-box h3 { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; }
+.insights-box ul { list-style: none; padding: 0; margin: 0; }
+.insights-box li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.7; font-weight: 300; }
+.insights-box li:last-child { border-bottom: none; }
+.insights-box li strong { font-weight: 500; }
+.highlight-green { color: var(--accent-green); font-weight: 500; }
+.highlight-neg { color: var(--negative); font-weight: 500; }
+.highlight-pos { color: var(--positive); font-weight: 500; }
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .container { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Sunsave — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Sunsave Plus (Subscription) · Sunsave Standard (Buy Outright) — Founded 2022 · London HQ · ~40+ Employees — March 2025 to February 2026</p>
+  </div>
+
+  <!-- EXECUTIVE KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Funding</div>
+      <div class="kpi-value">£113M</div>
+      <div class="kpi-sub">£13M equity + £100M debt (Jul 2025)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MoM Growth</div>
+      <div class="kpi-value">32%+</div>
+      <div class="kpi-delta pos">Since Sunsave Plus launch</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg System Size</div>
+      <div class="kpi-value">7.2kWp</div>
+      <div class="kpi-sub">+ 5.8kWh battery</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Subscription</div>
+      <div class="kpi-value">£69/mo</div>
+      <div class="kpi-sub">From, £0 upfront</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Customer Savings</div>
+      <div class="kpi-value">£685/yr</div>
+      <div class="kpi-delta pos">84% save more than they pay</div>
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>Sunsave Plus is the UK's first true solar subscription — and the financing model is the product.</strong> By offering £0 upfront installation with fixed monthly payments from £69/month over 20 years, Sunsave has removed the single largest barrier to residential solar adoption: the £8,000–£11,000 upfront cost. The subscription includes 20-year monitoring, maintenance, Aviva insurance, free battery/inverter replacement, and downtime cover. At 8.6% representative APR (5.9% fixed rate), total cost over 20 years is approximately £16,560 for a system that would cost ~£8,000 outright — customers pay a premium for the zero-upfront convenience and comprehensive guarantee. 84% of Sunsave Plus customers save more than they pay from day one.</li>
+      <li><strong>The £100M Crédit Agricole debt facility is the strategic moat.</strong> Solar subscriptions are capital-intensive — Sunsave must finance the hardware upfront for every installation and recoup it over 20 years of monthly payments. The £100M debt facility from Crédit Agricole CIB (secured Jul 2025) provides the balance sheet capacity to scale to thousands of installations without diluting equity. This is the same model that powered SolarCity's growth in the US. The £13M equity round (Norrsken VC + IPGL) funds operations, tech, and team — the debt funds the hardware. Recommend deploying the full facility within 18 months to establish market leadership before Octopus Energy and British Gas launch competing subscription products.</li>
+      <li><strong>Monthly growth of 32%+ is extraordinary — but unit economics must hold at scale.</strong> Sunsave Plus launched in January 2024 and has been compounding at 32%+ month-on-month. At this growth rate, installation volume could reach 5,000–8,000 systems annually within 2 years. The critical question is whether installation quality and customer satisfaction can scale proportionally — solar installation is inherently local and labour-intensive. Recommend investing in installer training, quality assurance, and a network of vetted installation partners across the UK.</li>
+      <li><strong>The 2027 Future Homes Standard is a massive structural tailwind.</strong> From 2025, the UK government's Future Homes Standard will require solar panels on 99% of new-build homes in England. Combined with £13.2B in retrofit funding and the national 47GW solar target, the addressable market is expanding dramatically. The UK added 2.5GW of solar capacity in 2025 (244,000 installations) — a 22% YoY increase. Sunsave's subscription model is uniquely positioned for the retrofit market, where upfront cost is the primary barrier.</li>
+      <li><strong>Sunsave Standard (buy outright) complements the subscription model and provides immediate cash flow.</strong> Sunsave Standard starts from ~£7,490 for a full solar + battery system. Customers who can afford upfront payment get a simpler deal with better total economics. The Standard product generates immediate revenue and positive cash flow — recommend maintaining a 30/70 Standard/Plus ratio to balance near-term cash generation with long-term recurring revenue growth.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 1: REVENUE & INSTALLATION VOLUME -->
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Installation Volume</div>
+  <div class="section-desc">Sunsave generates revenue through two products: Sunsave Plus (subscription — £69+/month over 20 years, zero upfront) and Sunsave Standard (buy outright — from ~£7,490). Plus is the growth engine — since launching in January 2024, it has grown 32%+ month-on-month. The subscription creates two revenue streams: the loan repayment element (~£57/month) which funds hardware cost recovery, and the monitoring &amp; maintenance fee (~£12/month) which is pure recurring service revenue. Standard generates immediate lump-sum revenue per installation. Additionally, Sunsave earns referral income from Smart Export Guarantee (SEG) tariff partnerships and potential future revenue from Hive Solar (partnership with British Gas/Centrica). The Hive partnership brings Sunsave's installation capability to British Gas's massive customer base — a potentially transformative distribution channel.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Installations — Sunsave Plus vs Standard (Est.)</div>
+      <div class="chart-container tall" id="chart-installs-monthly"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue Mix — Plus vs Standard (Est. Annual)</div>
+      <div class="chart-container" id="chart-revenue-mix"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Cumulative Installations Since Launch</div>
+      <div class="chart-container" id="chart-cumulative-installs"></div>
+    </div>
+  </div>
+
+  <!-- Product Comparison Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Sunsave Products — Comparison</div>
+    <table class="data-table">
+      <thead><tr><th>Feature</th><th>Sunsave Plus (Subscription)</th><th>Sunsave Standard (Buy Outright)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Upfront Cost</strong></td><td class="num"><span class="highlight-pos">£0</span></td><td class="num">From ~£7,490</td></tr>
+        <tr><td><strong>Monthly Payment</strong></td><td class="num">From £69/month</td><td class="num">£0 (paid upfront)</td></tr>
+        <tr><td><strong>Term</strong></td><td class="num">20 years (240 months)</td><td class="num">Outright ownership</td></tr>
+        <tr><td><strong>Total Cost (20yr)</strong></td><td class="num">~£16,560</td><td class="num">~£7,490</td></tr>
+        <tr><td><strong>APR</strong></td><td class="num">8.6% representative</td><td class="num">n/a</td></tr>
+        <tr><td><strong>Typical System</strong></td><td class="num">7.2kWp + 5.8kWh battery</td><td class="num">Customised to property</td></tr>
+        <tr><td><strong>Monitoring &amp; Maintenance</strong></td><td class="num"><span class="highlight-pos">20yr included (£12/mo)</span></td><td class="num">Optional add-on</td></tr>
+        <tr><td><strong>Insurance (Aviva)</strong></td><td class="num"><span class="highlight-pos">Included</span></td><td class="num">Customer arranges</td></tr>
+        <tr><td><strong>Battery/Inverter Replacement</strong></td><td class="num"><span class="highlight-pos">Free (guaranteed)</span></td><td class="num">Manufacturer warranty only</td></tr>
+        <tr><td><strong>Annual Savings (Est.)</strong></td><td class="num">£454 net (after payments)</td><td class="num">~£685 gross</td></tr>
+        <tr><td><strong>Early Repayment</strong></td><td class="num">No penalties</td><td class="num">n/a</td></tr>
+        <tr><td><strong>Ownership</strong></td><td class="num">From day one</td><td class="num">From day one</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Pricing from sunsave.energy/sunsave-plus and sunsave.energy/sunsave-standard (Mar 2026). Typical example based on 7.2kWp system with 5.8kWh battery for a 4-bed home. Actual costs vary by property.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 2: COST STRUCTURE -->
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Unit Economics</div>
+  <div class="section-desc">Sunsave's cost structure for a typical Sunsave Plus installation (~7.2kWp + 5.8kWh battery) breaks down approximately: solar panels ~£2,400 (10–12 panels at £200–£350 each), battery ~£3,200 (5.8kWh lithium-ion), inverter ~£800, mounting/electrical hardware ~£400, installation labour ~£1,200 (1–2 day install, 2-person crew), and design/survey/project management ~£500. Total system cost: approximately £8,500. Against the total 20-year subscription revenue of £16,560, the gross margin on the financing element is healthy — but the capital is deployed upfront and recovered over 240 months. The monitoring &amp; maintenance fee (£12/month = £2,880 over 20 years) must cover 24/7 remote monitoring, Aviva insurance premiums, and the battery/inverter replacement guarantee — estimated net margin on this element is 35–40%. For Sunsave Standard (outright purchase), gross margin is estimated at 25–30% on the hardware + installation, with immediate cash realisation.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">System Cost Breakdown — Typical 7.2kWp + Battery</div>
+      <div class="chart-container tall" id="chart-cost-breakdown"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Sunsave Plus — 20-Year Revenue vs Cost per Install</div>
+      <div class="chart-container tall" id="chart-unit-econ"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 3: PRICING & COMPETITIVE BENCHMARKING -->
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">The UK residential solar market is fragmented — Sunsave competes with Octopus Energy (who entered solar installation in 2023), Project Solar UK (one of the UK's largest by volume), The Solar Co., and hundreds of regional installers. Sunsave's differentiation is the subscription model — no other major installer offers a true £0-upfront subscription with 20-year maintenance guarantee. Octopus Energy sells systems outright (from ~£5,500 for panels only, ~£9,000 with battery) or via third-party finance. Project Solar UK is the price leader (from ~£4,500 for panels only). On a buy-outright basis, Sunsave Standard (~£7,490) sits in the mid-market. The subscription comparison is harder — the closest equivalent is a personal loan to fund an Octopus installation, which would carry 6–12% APR without the maintenance/insurance bundle. The 0% VAT on solar panels and batteries (extended through at least 2027) applies to all installers equally and is a significant market tailwind.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Solar + Battery System Cost — Buy Outright Comparison</div>
+      <div class="chart-container tall" id="chart-price-comparison"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Cost — Subscription vs Personal Loan</div>
+      <div class="chart-container tall" id="chart-monthly-comparison"></div>
+    </div>
+  </div>
+
+  <!-- Competitive Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Competitive Landscape — UK Residential Solar Installers (Mar 2026)</div>
+    <table class="data-table">
+      <thead><tr><th>Installer</th><th class="num">Panels Only</th><th class="num">Panels + Battery</th><th>Subscription?</th><th>Key Differentiator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Sunsave Plus</strong></td><td class="num"><span class="highlight-pos">£0 upfront</span></td><td class="num"><span class="highlight-pos">£0 upfront (from £69/mo)</span></td><td><span class="highlight-pos">★ Yes — 20yr subscription</span></td><td>Only true £0-upfront subscription with 20yr guarantee</td></tr>
+        <tr><td><strong>Sunsave Standard</strong></td><td class="num">~£5,500</td><td class="num">~£7,490</td><td>No</td><td>Buy outright with optional maintenance</td></tr>
+        <tr><td><strong>Octopus Energy</strong></td><td class="num">~£5,500</td><td class="num">~£9,000</td><td>No (finance via 3rd party)</td><td>Smart tariffs (Intelligent Octopus Flux), brand trust</td></tr>
+        <tr><td><strong>Project Solar UK</strong></td><td class="num">~£4,500</td><td class="num">~£7,500</td><td>No</td><td>Lowest price, high volume, since 2011</td></tr>
+        <tr><td><strong>The Solar Co.</strong></td><td class="num">~£5,000</td><td class="num">~£8,500</td><td>No</td><td>Premium install quality, London focus</td></tr>
+        <tr><td><strong>British Gas (Hive Solar)</strong></td><td class="num">~£6,000</td><td class="num">~£9,500</td><td>Finance options</td><td>Brand trust, existing customer base, Hive ecosystem</td></tr>
+        <tr><td><strong>EDF Solar</strong></td><td class="num">~£5,500</td><td class="num">~£8,800</td><td>No</td><td>Energy supplier integration</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Prices from sunsave.energy, octopus.energy, projectsolar.uk, fmb.org.uk, and installer comparison sites (Mar 2026). Prices are indicative for a typical 4kWp system (panels only) or 7kWp + 5.8kWh battery. All prices include 0% VAT. Actual quotes vary by property.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 4: CUSTOMER ACQUISITION & CONVERSION -->
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Customer Acquisition & Conversion Funnel</div>
+  <div class="section-desc">Sunsave's customer acquisition funnel follows a digital-first model: organic search (Sunsave has invested heavily in SEO content — their solar advice hub ranks for thousands of UK solar-related keywords), paid search (Google Ads targeting "solar panels UK", "solar panel cost", etc.), partnerships (Hive Solar with British Gas/Centrica, energy supplier referrals), and word-of-mouth/referrals. The funnel stages are: website visit → online quote request → remote survey/design → home survey → proposal acceptance → installation scheduling → installation complete. Estimated conversion from quote request to installation is 15–22% — strong for a high-consideration purchase. The Hive Solar partnership is particularly significant: British Gas has ~8 million UK household customers, and the Sunsave-powered "Hive Solar" product puts Sunsave's installation capability in front of the UK's largest energy customer base. Customer acquisition cost (CAC) is estimated at £400–£600 per installed system — Sunsave needs to significantly outperform this through the Hive partnership channel.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Customer Acquisition Funnel (Est. Monthly)</div>
+      <div class="chart-container tall" id="chart-funnel"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Lead Source Mix</div>
+      <div class="chart-container tall" id="chart-lead-source"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- STAT BANNER -->
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">£113M</div><div class="stat-label">Total Funding</div></div>
+      <div><div class="stat-value">32%+</div><div class="stat-label">Monthly Growth</div></div>
+      <div><div class="stat-value">£0</div><div class="stat-label">Upfront Cost</div></div>
+      <div><div class="stat-value">84%</div><div class="stat-label">Save More Than They Pay</div></div>
+      <div><div class="stat-value">0% VAT</div><div class="stat-label">On Solar + Battery</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 5: TEAM & FUNDING -->
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Team, Funding & Operational Capacity</div>
+  <div class="section-desc">Sunsave was founded in 2022 by Alick Dru (CEO, previously at McKinsey and renewable energy ventures) and Ben Graves (Co-Founder). The team has grown to approximately 40+ employees across product/engineering, sales, operations, finance/compliance, and customer success. The Head of Compliance &amp; Lending plays a critical role given that Sunsave Plus is an FCA-regulated consumer credit product. The company received £2.2M from the UK government's Green Home Finance Accelerator scheme to develop the Sunsave Plus model, followed by a transformative £113M funding round in July 2025 (£13M equity from Norrsken VC + IPGL, £100M debt facility from Crédit Agricole CIB). The debt facility is the strategic asset — it finances the hardware deployed under Sunsave Plus subscriptions and is collateralised by the 20-year payment streams. Installation is managed through a network of MCS-accredited installer partners rather than an in-house workforce — an asset-light approach that enables rapid geographic scaling.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Funding Timeline</div>
+      <div class="chart-container tall" id="chart-funding"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Team by Function (Est.)</div>
+      <div class="chart-container tall" id="chart-team"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 6: CASH FLOW & FINANCING MODEL -->
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Cash Flow, Financing Model & Capital Deployment</div>
+  <div class="section-desc">Sunsave's cash flow dynamics are fundamentally different from a traditional installer. For each Sunsave Plus installation, Sunsave deploys ~£8,500 in hardware + installation cost upfront, funded by the Crédit Agricole debt facility, and recovers it over 240 monthly payments of ~£57 (loan element) + £12 (maintenance fee). The net present value of the 20-year payment stream (~£16,560 nominal, ~£10,200 at 8% discount rate) exceeds the upfront cost by approximately 20% — the spread between the borrowing cost on the debt facility and the customer APR (8.6%) is the core margin engine. Cash flow is negative in the early months of rapid scaling (hardware deployed > payments received) but becomes increasingly positive as the installed base grows and monthly payment streams compound. Sunsave Standard (outright purchase) provides immediate positive cash flow — the estimated 30/70 Standard/Plus mix means Standard installations fund near-term operating costs while Plus builds the long-term recurring revenue asset.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Capital Deployment — Debt Facility Drawdown (£M, Est.)</div>
+      <div class="chart-container tall" id="chart-debt-drawdown"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Cumulative Recurring Revenue — Sunsave Plus (£K/month)</div>
+      <div class="chart-container tall" id="chart-recurring-revenue"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 7: MARKET OUTLOOK -->
+  <div class="section-label">Section 7</div>
+  <div class="section-title">UK Solar Market Outlook & Growth Opportunity</div>
+  <div class="section-desc">The UK residential solar market is in a structural growth phase. In 2025, the UK added 2.5GW of solar capacity — including 244,000 residential installations (22% YoY increase), the highest annual total since MCS records began. The market is valued at approximately $947M (2024) and is forecast to reach $3.1B by 2033 (14.2% CAGR). Key growth drivers include: the 2027 Future Homes Standard (solar required on 99% of new English homes), £13.2B government retrofit funding, rising energy costs making payback periods shorter (now 6–8 years for outright purchase), and growing consumer awareness of climate action. Sunsave's opportunity is enormous: of the UK's ~28 million homes, fewer than 1.5 million currently have solar panels. The subscription model addresses the ~70% of homeowners who cite upfront cost as the primary barrier. With £100M in debt capacity, Sunsave can finance approximately 11,000–12,000 installations — capturing 5% of the annual UK residential solar market.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">UK Residential Solar Installations — Annual (K)</div>
+      <div class="chart-container" id="chart-market-growth"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Barriers to Solar Adoption — UK Homeowners</div>
+      <div class="chart-container" id="chart-barriers"></div>
+    </div>
+  </div>
+
+  <!-- Data Sources -->
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Sunsave pricing</strong> from sunsave.energy/sunsave-plus and sunsave.energy/sunsave-standard (Mar 2026). Monthly payment example: 240 x £69 = £16,560 total (£57 loan + £12 maintenance). Representative APR 8.6%, fixed rate 5.9%.</li>
+      <li><strong>Funding</strong>: £113M round (Jul 2025) — £13M equity (Norrsken VC + IPGL) + £100M debt (Crédit Agricole CIB). Source: tech.eu, uktechnews.info. Earlier £2.2M Green Home Finance Accelerator from sunsave.energy/blog.</li>
+      <li><strong>Market data</strong>: 244,000 UK residential installations in 2025 (+22% YoY) from pv-magazine.com, solarpowerportal.co.uk. Market size $947M (2024) → $3.1B (2033) from imarcgroup.com. 2027 Future Homes Standard from government sources.</li>
+      <li><strong>Competitor pricing</strong> from octopus.energy, projectsolar.uk, fmb.org.uk, renewableenergyhub.co.uk, and installer comparison sites (Mar 2026). Typical 4kWp panels-only or 7kWp + battery systems.</li>
+      <li><strong>Team structure</strong>: Key roles include Head of Compliance &amp; Lending (FCA-regulated consumer credit oversight) and installer network management. Source: theorg.com, LinkedIn.</li>
+      <li><strong>Revenue, unit economics, funnel metrics, and team breakdown</strong> are illustrative estimates. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+var GREEN    = '#2e7d32';
+var SUN      = '#f9a825';
+var BATTERY  = '#1565c0';
+var INSTALL  = '#6d4c41';
+var POSITIVE = '#2d8a4e';
+var NEGATIVE = '#c0392b';
+var MUTED    = '#999999';
+var LIGHT_GREEN = '#66bb6a';
+var DARK_GREEN  = '#1b5e20';
+
+var months = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+
+// ─── CHART 1: Monthly Installations ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-installs-monthly'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Sunsave Plus','Sunsave Standard'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Installations', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Sunsave Plus', type: 'bar', stack: 'inst', data: [85,110,145,190,250,325,420,380,340,280,220,180], itemStyle: { color: GREEN } },
+      { name: 'Sunsave Standard', type: 'bar', stack: 'inst', data: [35,42,55,70,90,110,140,130,115,95,80,65], itemStyle: { color: SUN } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 2: Revenue Mix ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 48, name: 'Plus (Subscription\nPayments)', itemStyle: { color: GREEN } },
+        { value: 32, name: 'Standard (Outright\nPurchase)', itemStyle: { color: SUN } },
+        { value: 12, name: 'Maintenance &\nMonitoring Fees', itemStyle: { color: LIGHT_GREEN } },
+        { value: 8, name: 'SEG / Referrals\n/ Other', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 3: Cumulative Installations ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cumulative-installs'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: 'Total Installs', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [180, 480, 920, 1500, 2400, 3800, 5200, 6100], smooth: true,
+      lineStyle: { color: GREEN, width: 3 },
+      itemStyle: { color: GREEN },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(46,125,50,0.25)' },{ offset: 1, color: 'rgba(46,125,50,0.02)' }] } },
+      label: { show: true, fontSize: 10, formatter: function(p){ return p.value >= 1000 ? (p.value/1000).toFixed(1)+'K' : p.value; } }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 4: System Cost Breakdown ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cost-breakdown'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: £{c}' },
+    series: [{
+      type: 'pie', radius: ['35%','70%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n£{c}' },
+      data: [
+        { value: 3200, name: 'Battery (5.8kWh)', itemStyle: { color: BATTERY } },
+        { value: 2400, name: 'Solar Panels', itemStyle: { color: SUN } },
+        { value: 1200, name: 'Installation Labour', itemStyle: { color: INSTALL } },
+        { value: 800, name: 'Inverter', itemStyle: { color: GREEN } },
+        { value: 400, name: 'Mounting / Hardware', itemStyle: { color: LIGHT_GREEN } },
+        { value: 500, name: 'Design / Survey / PM', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 5: Unit Economics ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-unit-econ'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['System\nCost','Loan\nRepayments\n(20yr)','Maintenance\nFees (20yr)','Total\nRevenue\n(20yr)','Net\nMargin'], axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '£', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 8500, itemStyle: { color: NEGATIVE } },
+        { value: 13680, itemStyle: { color: GREEN } },
+        { value: 2880, itemStyle: { color: LIGHT_GREEN } },
+        { value: 16560, itemStyle: { color: POSITIVE } },
+        { value: 8060, itemStyle: { color: DARK_GREEN } }
+      ],
+      label: { show: true, position: 'top', fontSize: 10, formatter: '£{c}' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 6: Price Comparison (Buy Outright) ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-comparison'));
+  var names = ['British Gas\n(Hive)\n~£9,500','Octopus\nEnergy\n~£9,000','EDF Solar\n~£8,800','The Solar\nCo.\n~£8,500','Project\nSolar\n~£7,500','Sunsave\nStandard\n~£7,490'];
+  var prices = [9500, 9000, 8800, 8500, 7500, 7490];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 75, left: 55, right: 20 },
+    xAxis: { type: 'category', data: names, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£', min: 5000, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: prices.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 5 ? GREEN : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 9, formatter: '£{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 7: Monthly Cost Comparison ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-monthly-comparison'));
+  var options = ['Sunsave Plus\n(subscription)','Personal Loan\n(7% APR, 10yr)','Personal Loan\n(10% APR, 10yr)','Credit Card\n(20% APR)'];
+  var monthly = [69, 98, 108, 165];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 65, left: 55, right: 20 },
+    xAxis: { type: 'category', data: options, axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£/month', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: monthly.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 0 ? GREEN : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 11, fontWeight: 600, formatter: '£{c}/mo' },
+      barWidth: '45%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 8: Customer Funnel ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-funnel'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+    series: [{
+      type: 'funnel', left: '10%', top: 20, bottom: 20, width: '80%', min: 0, max: 100,
+      sort: 'descending', gap: 4,
+      label: { show: true, position: 'inside', fontSize: 11, formatter: '{b}\n{c}' },
+      data: [
+        { value: 100, name: 'Website Visits (12K/mo)', itemStyle: { color: '#a5d6a7' } },
+        { value: 42, name: 'Quote Requests (5K)', itemStyle: { color: LIGHT_GREEN } },
+        { value: 22, name: 'Remote Surveys (2.6K)', itemStyle: { color: GREEN } },
+        { value: 14, name: 'Home Surveys (1.7K)', itemStyle: { color: '#388e3c' } },
+        { value: 8, name: 'Proposals Accepted (960)', itemStyle: { color: '#2e7d32' } },
+        { value: 5, name: 'Installed (600)', itemStyle: { color: DARK_GREEN } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 9: Lead Source ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-lead-source'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 10, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 35, name: 'Organic Search / SEO', itemStyle: { color: GREEN } },
+        { value: 22, name: 'Paid Search (Google)', itemStyle: { color: SUN } },
+        { value: 18, name: 'Hive / British Gas', itemStyle: { color: BATTERY } },
+        { value: 12, name: 'Referrals / WOM', itemStyle: { color: LIGHT_GREEN } },
+        { value: 8, name: 'Social / Content', itemStyle: { color: INSTALL } },
+        { value: 5, name: 'Other', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 10: Funding Timeline ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-funding'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Green Home\nAccelerator\n(2023)','Seed / Early\n(2022–23)','Series A\nEquity\n(Jul 2025)','Debt Facility\n(Jul 2025)','Total\nRaised'], axisLabel: { fontSize: 8, interval: 0 } },
+    yAxis: { type: 'value', name: '£M', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 2.2, itemStyle: { color: LIGHT_GREEN } },
+        { value: 5.4, itemStyle: { color: SUN } },
+        { value: 13, itemStyle: { color: GREEN } },
+        { value: 100, itemStyle: { color: BATTERY } },
+        { value: 120.6, itemStyle: { color: POSITIVE } }
+      ],
+      label: { show: true, position: 'top', fontSize: 10, formatter: '£{c}M' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 11: Team ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-team'));
+  var fns = ['Sales &\nCustomer','Product &\nEngineering','Operations &\nInstall Mgmt','Finance &\nCompliance','Marketing\n& Content'];
+  var counts = [12, 10, 8, 6, 5];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 50, right: 20 },
+    xAxis: { type: 'category', data: fns, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: 'Staff', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: counts.map(function(v,i){
+        var cols = [GREEN, BATTERY, INSTALL, SUN, LIGHT_GREEN];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 11 },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 12: Debt Facility Drawdown ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-debt-drawdown'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['Deployed (Cumulative)','Available'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Q3 25','Q4 25','Q1 26','Q2 26 (Proj)','Q3 26 (Proj)','Q4 26 (Proj)'], axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'value', name: '£M', max: 110, axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Deployed (Cumulative)', type: 'bar', stack: 'debt', data: [8.5, 22, 38, 55, 72, 88], itemStyle: { color: GREEN } },
+      { name: 'Available', type: 'bar', stack: 'debt', data: [91.5, 78, 62, 45, 28, 12], itemStyle: { color: '#e0e0e0' } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 13: Cumulative Recurring Revenue ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-recurring-revenue'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '£K/mo', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [42, 50, 60, 73, 90, 112, 141, 167, 190, 210, 225, 237], smooth: true,
+      lineStyle: { color: GREEN, width: 3 },
+      itemStyle: { color: GREEN },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(46,125,50,0.3)' },{ offset: 1, color: 'rgba(46,125,50,0.02)' }] } },
+      label: { show: true, fontSize: 9, formatter: '£{c}K' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 14: UK Solar Market Growth ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-market-growth'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['2021','2022','2023','2024','2025','2026 (Est.)','2027 (Est.)'], axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'value', name: 'Installations (K)', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 82, itemStyle: { color: '#a5d6a7' } },
+        { value: 130, itemStyle: { color: '#81c784' } },
+        { value: 170, itemStyle: { color: LIGHT_GREEN } },
+        { value: 200, itemStyle: { color: GREEN } },
+        { value: 244, itemStyle: { color: '#388e3c' } },
+        { value: 295, itemStyle: { color: '#2e7d32' } },
+        { value: 360, itemStyle: { color: DARK_GREEN } }
+      ],
+      label: { show: true, position: 'top', fontSize: 10, formatter: '{c}K' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 15: Barriers to Solar ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-barriers'));
+  var barriers = ['Upfront cost\ntoo high','Don\'t own\nmy home','Unsure\nabout savings','Roof not\nsuitable','Planning\nconcerns','Other'];
+  var pct = [68, 14, 8, 5, 3, 2];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 55, left: 50, right: 20 },
+    xAxis: { type: 'category', data: barriers, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '%', max: 80, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: pct.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 0 ? GREEN : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '{c}%' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+</script>
+</body>
+</html>

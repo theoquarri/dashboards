@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HYDROGRID — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--bg-dark:#0a2239;--card:#fff;--text:#111;--text-secondary:#555;--text-on-dark:#8fb8d4;--muted:#888;--border:#dde2ea;--accent:#0a2239;--accent-blue:#0277bd;--accent-teal:#00897b;--accent-water:#29b6f6;--positive:#2d8a4e;--negative:#c0392b;--hg-primary:#0277bd;--hg-water:#29b6f6;--hg-dark:#0a2239;--hg-alpine:#00897b;--hg-energy:#f9a825;--font:'Archivo',sans-serif;--mono:'JetBrains Mono','Consolas',monospace}
+*,*::before,*::after{font-family:'Archivo',sans-serif;box-sizing:border-box}
+body{font-family:'Archivo',sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin:0;padding:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.header{margin-bottom:40px;border-bottom:3px solid var(--hg-primary);padding-bottom:22px}
+.header h1{font-size:28px;font-weight:600;color:var(--text);margin:0 0 4px 0;display:flex;align-items:center;gap:12px}
+.header p{font-size:13px;color:var(--text-secondary);font-weight:300;margin:0}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background-color:var(--hg-primary);color:#fff;padding:5px 10px;border-radius:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:40px}
+.kpi-card{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.kpi-sub{font-size:12px;color:var(--text-secondary);font-weight:300;margin-top:4px}
+.kpi-delta{font-size:12px;font-weight:500;margin-top:4px}
+.kpi-delta.pos{color:var(--positive)}
+.kpi-delta.neg{color:var(--negative)}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:2.5px;color:var(--hg-primary);margin-bottom:8px}
+.section-title{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--text-secondary);font-weight:300;margin-bottom:28px;line-height:1.6}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-box-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:16px}
+.chart-container{width:100%;height:320px}
+.chart-container.tall{height:400px}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);padding:10px 16px;text-align:left}
+.data-table td{font-size:12px;font-weight:300;padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table td.num{font-family:var(--mono);font-weight:400;text-align:right}
+.data-table th.num{text-align:right}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:#f6f8fb}
+.stat-banner{background:var(--bg-dark);padding:44px 0;margin:48px 0}
+.stat-banner .banner-inner{max-width:1100px;margin:0 auto;padding:0 32px}
+.stat-banner .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;text-align:center}
+.stat-banner .stat-value{font-size:32px;font-weight:700;color:var(--hg-water);font-family:var(--mono);margin-bottom:6px}
+.stat-banner .stat-label{font-size:12px;font-weight:400;color:var(--text-on-dark);text-transform:uppercase;letter-spacing:1px}
+.key-findings{background:#e0f2f1;border-left:4px solid var(--hg-primary);border-radius:8px;padding:32px;margin-bottom:40px}
+.key-findings h3{font-size:18px;font-weight:600;margin:0 0 20px 0}
+.key-findings ol{list-style:none;margin:0;padding:0;counter-reset:item}
+.key-findings li{font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;padding-left:28px;counter-increment:item;position:relative}
+.key-findings li:before{content:counter(item);position:absolute;left:0;top:0;background:var(--hg-primary);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.key-findings li strong{font-weight:600;color:var(--text)}
+.key-findings li:last-child{margin-bottom:0}
+.insights-box{background:var(--card);border-radius:10px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);border-left:4px solid var(--hg-primary);margin-top:24px;margin-bottom:24px}
+.insights-box h3{font-size:18px;font-weight:600;margin:0 0 16px 0}
+.insights-box ul{list-style:none;padding:0;margin:0}
+.insights-box li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7;font-weight:300}
+.insights-box li:last-child{border-bottom:none}
+.insights-box li strong{font-weight:500}
+.highlight-pos{color:var(--positive);font-weight:500}
+.highlight-neg{color:var(--negative);font-weight:500}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:24px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>HYDROGRID — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Hydropower Optimization Software · SaaS · Founded 2016 · Vienna, Austria — ~40 Employees · 7 Countries — March 2025 to February 2026</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">ARR (Est.)</div><div class="kpi-value">€4.5M</div><div class="kpi-delta pos">▲ Post Series A scaling</div></div>
+    <div class="kpi-card"><div class="kpi-label">Funding</div><div class="kpi-value">$8.5M</div><div class="kpi-sub">Series A (Dec 2023)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value">~40</div><div class="kpi-sub">Vienna HQ + remote</div></div>
+    <div class="kpi-card"><div class="kpi-label">Countries</div><div class="kpi-value">7</div><div class="kpi-sub">Alpine + Nordics + expanding</div></div>
+    <div class="kpi-card"><div class="kpi-label">Generation Uplift</div><div class="kpi-value">+10%</div><div class="kpi-sub">Power output improvement</div></div>
+  </div>
+
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>HYDROGRID solves a deceptively simple problem — hydropower operators leave 5–15% of generation revenue on the table because they lack real-time optimisation.</strong> Run-of-river and storage hydro plants face complex decisions every hour: turbine dispatch, water level management, inflow forecasting, and electricity price arbitrage. Most operators still rely on manual scheduling or basic rule-based systems. HYDROGRID Insight combines ML-based inflow forecasting, electricity price prediction, and multi-horizon optimisation (short/medium/long-term) into a fully automated platform. The claimed 10% generation uplift on average is transformative at the unit economics level — for a 50MW plant generating €15M/year, that's €1.5M in incremental annual revenue from software alone. This value proposition drives strong willingness to pay and low churn.</li>
+      <li><strong>At ~40 employees and $8.5M Series A, HYDROGRID is a lean, capital-efficient operation — the data team is small but effective.</strong> The company operates with a tight team where a handful of people self-serve their own data needs, and that model works at the current scale. The strategic question is whether this lean data approach scales as the customer base expands across geographies and the product deepens. The Series A from Inven Capital (CEZ Group's venture arm) and Karma Ventures provides 18–24 months of runway to prove the go-to-market in new regions. Current focus is on Alpine (Austria, Switzerland, Germany) and Nordic markets (Norway, Sweden), with North American expansion recently announced.</li>
+      <li><strong>The global hydropower market is enormous ($260B+) but the addressable software optimisation layer is a fraction of that — and HYDROGRID is one of very few pure-play SaaS providers.</strong> The digitisation opportunity in hydropower is estimated to unlock an additional 42 TWh globally and $5B in annual operational savings. HYDROGRID's competitors are primarily large industrial conglomerates (Voith, ABB, Siemens) that bundle control systems with hardware — none offer the same pure-software, cloud-native, ML-driven approach. This creates a classic wedge opportunity: land with optimisation software, expand into fleet-wide digital twin and asset management.</li>
+      <li><strong>The expansion into North America is the critical growth vector.</strong> HYDROGRID recently announced two new North American clients, signalling its push into the world's third-largest hydropower market (after China and Brazil). The US has ~102 GW of installed hydro capacity across 2,300+ plants, many of which are ageing and under-optimised. The Inflation Reduction Act and grid modernisation spending create tailwinds for hydropower digitisation. The challenge is adapting the product to different regulatory frameworks, grid structures, and customer decision-making processes — US utilities are notoriously slow procurement cycles (12–24 months).</li>
+      <li><strong>HYDROGRID's approach of solving a future problem — fleet-level optimisation across cascades and portfolios — positions it well for the energy transition, even if some customers are more interested in this as a future capability than today's need.</strong> As renewables penetration increases, hydropower's role shifts from baseload generation to flexible balancing and storage. This makes real-time optimisation exponentially more valuable: a hydro plant that can respond to price signals in minutes rather than hours captures significantly more market value. HYDROGRID's platform is built for this future — cascade optimisation across multiple plants, integration with day-ahead and intraday markets, and coordination with wind/solar forecasts.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & SaaS Metrics</div>
+  <div class="section-desc">HYDROGRID operates a B2B SaaS model, licensing its HYDROGRID Insight platform to hydropower operators on an annual subscription basis. Pricing is typically structured as a percentage of the incremental revenue generated (gain-share model) or a fixed annual license fee per plant/portfolio, ranging from approximately €50K–€250K per year depending on plant capacity and number of assets optimised. With operations across 7 countries and a growing customer base of utility and independent power producers, estimated ARR is approximately €4.5M (post Series A scaling). The gain-share pricing model aligns incentives perfectly: HYDROGRID only earns when the customer earns more. This creates strong retention dynamics — once a plant sees 10%+ generation uplift, the software effectively pays for itself many times over, making cancellation economically irrational. Net revenue retention is estimated at 110–120%, driven by land-and-expand within multi-plant operators.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Estimated ARR Growth (€K)</div><div class="chart-container tall" id="chart-arr"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue Model Mix</div><div class="chart-container" id="chart-rev-model"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Customer Expansion — Land & Expand</div><div class="chart-container" id="chart-expansion"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Product & Technology Platform</div>
+  <div class="section-desc">HYDROGRID Insight is an integrated water management and production planning platform that combines three core ML capabilities: inflow forecasting (predicting water availability from precipitation, snowmelt, and upstream flows), electricity price forecasting (day-ahead and intraday market prices), and multi-horizon production optimisation (short-term dispatch, medium-term water value management, and long-term seasonal planning). The platform supports run-of-river, storage, and cascade configurations — the cascade capability (optimising multiple linked plants on the same river system) is a particular technical differentiator that few competitors can match. HYDROGRID Insight operates as a cloud-native SaaS, connecting to plant SCADA systems via API and delivering optimised dispatch schedules automatically. The platform processes real-time hydrological data, weather forecasts, grid signals, and market prices to make dispatch decisions every 15 minutes — replacing manual processes that typically operate on hourly or daily cycles.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Platform Capabilities — Feature Stack</div><div class="chart-container tall" id="chart-features"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Optimisation Horizons</div><div class="chart-container tall" id="chart-horizons"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Plant Type Coverage — HYDROGRID Insight</div>
+    <table class="data-table">
+      <thead><tr><th>Plant Type</th><th>Description</th><th class="num">% of Global Hydro</th><th>Optimisation Challenge</th><th>HYDROGRID Value</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Run-of-River</strong></td><td>No significant storage; generates based on natural flow</td><td class="num">~55%</td><td>Maximise output within flow constraints, minimise spill</td><td><span class="highlight-pos">+5–8% generation uplift</span></td></tr>
+        <tr><td><strong>Storage / Reservoir</strong></td><td>Dam with reservoir; flexible dispatch</td><td class="num">~35%</td><td>Water value management, price arbitrage, seasonal planning</td><td><span class="highlight-pos">+8–15% revenue uplift</span></td></tr>
+        <tr><td><strong>Cascade</strong></td><td>Multiple linked plants on same river</td><td class="num">~10%</td><td>Coordinating water flow across plants, complex dependencies</td><td><span class="highlight-pos">+10–20% system-level optimisation</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Competitive Landscape</div>
+  <div class="section-desc">HYDROGRID competes in a fragmented market where the primary competitors are large industrial conglomerates that bundle software with hardware and services. Voith Hydro, ABB, and Siemens Energy all offer digital solutions for hydropower, but these are typically tied to their own turbine and control system hardware. HYDROGRID's advantage is hardware-agnostic, cloud-native, pure-software positioning — it works with any turbine manufacturer's equipment and integrates with any SCADA system. Other software competitors include SINTEF (Norwegian research institute with optimisation tools), Skellefteå Kraft's in-house tools, and various academic/research spin-offs. None have achieved the commercial traction or product maturity of HYDROGRID Insight. The key competitive risk is that Voith or ABB could acquire a software startup or significantly invest in their digital offerings, bringing HYDROGRID-like capabilities to their installed base of thousands of turbines.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Competitive Positioning</div><div class="chart-container" id="chart-competitive"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Hydropower Digital Maturity by Region</div><div class="chart-container" id="chart-maturity"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Competitive Landscape — Hydropower Optimisation</div>
+    <table class="data-table">
+      <thead><tr><th>Company</th><th>HQ</th><th>Type</th><th>Approach</th><th>Differentiator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>HYDROGRID</strong></td><td>Vienna, Austria</td><td>Pure-play SaaS</td><td>Cloud-native, ML-driven, hardware-agnostic</td><td>Cascade optimisation, gain-share pricing, 10%+ uplift</td></tr>
+        <tr><td><strong>Voith Hydro Digital</strong></td><td>Germany</td><td>OEM + Digital</td><td>Bundled with Voith turbines, on-premise</td><td>Largest turbine installed base globally</td></tr>
+        <tr><td><strong>ABB Ability</strong></td><td>Switzerland</td><td>OEM + Digital</td><td>Industrial IoT platform, on-premise / hybrid</td><td>Grid integration, protection systems</td></tr>
+        <tr><td><strong>Siemens Energy</strong></td><td>Germany</td><td>OEM + Digital</td><td>MindSphere platform, digital twin</td><td>Cross-asset fleet management</td></tr>
+        <tr><td><strong>SINTEF</strong></td><td>Norway</td><td>Research / Tools</td><td>Academic models, consulting engagements</td><td>Deep Nordic hydro expertise</td></tr>
+        <tr><td><strong>In-house / Manual</strong></td><td>Various</td><td>Custom / Legacy</td><td>Spreadsheets, rule-based, manual dispatch</td><td>Low cost, institutional knowledge — but leaves revenue on table</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Team, Funding & Investors</div>
+  <div class="section-desc">HYDROGRID was founded in 2016 in Vienna, Austria, and employs approximately 40 people across engineering, data science, and commercial roles. The team is deliberately lean — a small number of analysts self-serve their own data needs, which works well at the current scale but will need to evolve as the company grows internationally. The $8.5M Series A (closed December 2023) was led by Inven Capital (the venture arm of Czech utility CEZ Group) and Karma Ventures, with participation from CNB Capital and existing investor SET Ventures. The strategic value of Inven Capital is significant: CEZ Group operates hydropower plants across Central Europe, providing both a reference customer and deep domain expertise. SET Ventures (a European energy transition fund) has been an investor since earlier rounds. The funding provides approximately 18–24 months of runway for geographic expansion (North America, Nordics deepening) and product development (fleet-level digital twin, market coupling).</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Funding Structure ($M)</div><div class="chart-container tall" id="chart-funding"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Team Composition (Est.)</div><div class="chart-container tall" id="chart-team"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">+10%</div><div class="stat-label">Generation Uplift</div></div>
+      <div><div class="stat-value">7</div><div class="stat-label">Countries</div></div>
+      <div><div class="stat-value">42 TWh</div><div class="stat-label">Global Digitisation Potential</div></div>
+      <div><div class="stat-value">$5B</div><div class="stat-label">Annual Savings Opportunity</div></div>
+      <div><div class="stat-value">15 min</div><div class="stat-label">Optimisation Cycle</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Geographic Strategy & Market Expansion</div>
+  <div class="section-desc">HYDROGRID's customer base spans seven countries, with the strongest presence in the Alpine region (Austria, Switzerland, Germany) and growing traction in Scandinavia (Norway, Sweden). These regions lead globally in hydropower fleet-level optimisation and digital maturity, making them natural early markets for HYDROGRID Insight. The critical expansion vector is North America: the US has ~102 GW of installed hydro capacity across 2,300+ plants, many of which are ageing and managed with legacy control systems. HYDROGRID recently announced two new North American clients, establishing its beachhead in the market. Additional expansion targets include Southern Europe (Italy, Spain, Portugal — significant small/medium hydro fleets) and South America (Brazil, Colombia — the world's second-largest hydro market). The go-to-market motion varies by region: in Europe, direct sales to utility operators; in North America, likely via partnerships with engineering firms and system integrators who have existing utility relationships.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Global Hydropower Installed Capacity by Region (GW)</div><div class="chart-container" id="chart-geo-capacity"></div></div>
+    <div class="chart-box"><div class="chart-box-title">HYDROGRID Market Penetration Status</div><div class="chart-container" id="chart-market-status"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Unit Economics & Customer Value</div>
+  <div class="section-desc">HYDROGRID's unit economics benefit from a fundamental alignment between customer value and pricing. A typical customer — a 50MW hydropower plant generating approximately €15M in annual revenue — can expect a 10% generation uplift worth €1.5M/year from HYDROGRID Insight. Against an annual license fee of €100K–€200K, the ROI is 7–15x in the first year alone. This extraordinary payback period drives short sales cycles (by infrastructure standards), high conversion rates, and near-zero churn — operators are unlikely to cancel software that demonstrably generates 10x its cost in incremental revenue. Gross margins for a SaaS business of this type are estimated at 75–85%, with the primary cost of revenue being cloud infrastructure and customer success/technical onboarding. The gain-share pricing model (where HYDROGRID takes a percentage of incremental revenue) further reduces customer objections by aligning downside risk — if the software doesn't generate uplift, the customer doesn't pay.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Customer ROI — 50MW Plant Example (€K/yr)</div><div class="chart-container tall" id="chart-roi"></div></div>
+    <div class="chart-box"><div class="chart-box-title">SaaS Margin Structure (Est.)</div><div class="chart-container tall" id="chart-margins"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Global Hydropower Market & Digitisation Opportunity</div>
+  <div class="section-desc">The global hydropower market is valued at approximately $260 billion (2025), with installed capacity of ~1,400 GW across 160+ countries. Hydropower accounts for approximately 15% of global electricity generation and over 60% of all renewable electricity. However, digitalisation penetration remains extremely low — estimated at less than 10% of global hydro capacity using advanced optimisation software. The International Energy Agency estimates that digitalised hydropower could unlock an additional 42 TWh of annual generation globally and deliver $5 billion in operational cost savings. As the energy transition accelerates, hydropower's role is shifting from baseload generation to flexible grid balancing — complementing variable wind and solar. This shift dramatically increases the value of real-time optimisation: a hydro plant that can respond to price signals in minutes captures significantly more revenue than one operating on manual hourly/daily schedules. HYDROGRID's addressable market within the broader $260B figure is the "software layer" — estimated at $2–4 billion globally for advanced optimisation and digital twin solutions, growing at 15–20% CAGR as utilities digitise.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Global Hydropower Generation by Country (TWh)</div><div class="chart-container" id="chart-global-gen"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Digitisation Opportunity — Addressable SW Market ($B)</div><div class="chart-container" id="chart-sw-market"></div></div>
+  </div>
+
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Funding</strong>: $8.5M Series A (Dec 2023), led by Inven Capital and Karma Ventures, with CNB Capital and SET Ventures — from renewableenergyworld.com and tech.eu.</li>
+      <li><strong>Product</strong>: HYDROGRID Insight capabilities, 10% generation uplift, cascade optimisation from hydrogrid.ai and waterpowermagazine.com (2024).</li>
+      <li><strong>Market data</strong>: Global hydropower $260B (2025), 1,400 GW installed capacity from mordorintelligence.com and fortunebusinessinsights.com. 42 TWh digitisation potential and $5B savings from IEA Hydropower Special Report.</li>
+      <li><strong>Employees</strong>: ~40 from LinkedIn and Tracxn profiles (2025).</li>
+      <li><strong>Competitors</strong>: Voith, ABB, Siemens Energy digital hydro offerings from company websites and power-technology.com.</li>
+      <li><strong>North America expansion</strong>: Two new North American clients announced from power-technology.com (2025). US hydro capacity ~102 GW from EIA.</li>
+      <li><strong>Revenue, margin, and customer value estimates</strong> are illustrative based on SaaS benchmarks and industry context. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+var HG='#0277bd',WATER='#29b6f6',DARK='#0a2239',ALP='#00897b',ENERGY='#f9a825',POS='#2d8a4e',NEG='#c0392b',MUT='#999',VOITH='#e65100',ABB='#cc0000',SIEM='#00695c';
+
+(function(){var c=echarts.init(document.getElementById('chart-arr'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:60,right:20},xAxis:{type:'category',data:['2021','2022','2023','2024','2025E','2026E'],axisLabel:{fontSize:11}},yAxis:{type:'value',name:'€K',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:600,itemStyle:{color:'#81d4fa'}},{value:1200,itemStyle:{color:'#4fc3f7'}},{value:2100,itemStyle:{color:'#29b6f6'}},{value:3200,itemStyle:{color:'#039be5'}},{value:4500,itemStyle:{color:'#0277bd'}},{value:6500,itemStyle:{color:'#01579b'}}],label:{show:true,position:'top',fontSize:11,formatter:'€{c}K'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-rev-model'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:55,name:'Annual License\nFee',itemStyle:{color:HG}},{value:30,name:'Gain-Share /\nPerformance',itemStyle:{color:ENERGY}},{value:10,name:'Implementation\n& Onboarding',itemStyle:{color:ALP}},{value:5,name:'Custom\nDevelopment',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-expansion'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Year 1\n(Single Plant)','Year 2\n(+2 Plants)','Year 3\n(Portfolio)','Year 4\n(Cascade)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'ACV (€K)',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:120,itemStyle:{color:WATER}},{value:280,itemStyle:{color:'#039be5'}},{value:450,itemStyle:{color:HG}},{value:650,itemStyle:{color:DARK}}],label:{show:true,position:'top',fontSize:11,formatter:'€{c}K'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-features'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:120,right:20},yAxis:{type:'category',data:['Market Coupling','Fleet Digital Twin','Cascade Optimisation','Seasonal Planning','Intraday Trading','Day-Ahead Dispatch','Price Forecasting','Inflow Forecasting'].reverse(),axisLabel:{fontSize:10}},xAxis:{type:'value',name:'Maturity (10=production)',max:10,axisLabel:{fontSize:10}},series:[{type:'bar',data:[9,9,9,8,8,7,6,5].reverse().map(function(v,i){return{value:v,itemStyle:{color:v>=8?HG:v>=6?WATER:MUT}}}),label:{show:true,position:'right',fontSize:10},barWidth:'55%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-horizons'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Real-Time\n(15 min)','Short-Term\n(24-72 hr)','Medium-Term\n(1-4 weeks)','Long-Term\n(Seasonal)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Value Impact Index',max:100,axisLabel:{fontSize:10}},series:[{name:'Dispatch Revenue',type:'bar',data:[85,70,50,30],itemStyle:{color:HG}},{name:'Risk Reduction',type:'bar',data:[15,30,40,60],itemStyle:{color:ENERGY}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-competitive'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['Software Maturity','Hardware Lock-in','Cloud Native','Price'],top:0,textStyle:{fontSize:9}},grid:{top:40,bottom:50,left:50,right:20},xAxis:{type:'category',data:['HYDROGRID','Voith\nDigital','ABB\nAbility','Siemens\nEnergy','Manual /\nLegacy'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Score (10=best)',max:10,axisLabel:{fontSize:10}},series:[{name:'Software Maturity',type:'bar',data:[9,6,6,5,2],itemStyle:{color:HG}},{name:'Hardware Lock-in',type:'bar',data:[10,3,4,4,8],itemStyle:{color:ENERGY}},{name:'Cloud Native',type:'bar',data:[10,3,4,5,1],itemStyle:{color:ALP}},{name:'Price',type:'bar',data:[7,4,4,4,9],itemStyle:{color:MUT}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-maturity'));var regions=['Alpine\n(AT/CH/DE)','Nordics\n(NO/SE)','North\nAmerica','Southern\nEurope','South\nAmerica','Asia-\nPacific'];var maturity=[85,80,40,30,20,15];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:regions,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Digital Maturity %',max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:maturity.map(function(v){return{value:v,itemStyle:{color:v>=70?POS:v>=30?ENERGY:NEG}}}),label:{show:true,position:'top',fontSize:10,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-funding'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['SET Ventures\n(Seed/Pre-A)','Inven Capital\n(Series A Lead)','Karma Ventures\n(Series A)','CNB Capital\n& Others','Total'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'$M',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:1.5,itemStyle:{color:WATER}},{value:3.5,itemStyle:{color:HG}},{value:2.5,itemStyle:{color:ALP}},{value:1.0,itemStyle:{color:MUT}},{value:8.5,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'${c}M'},barWidth:'45%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-team'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: ~{c} ({d}%)'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n~{c}'},data:[{value:16,name:'Engineering\n& Data Science',itemStyle:{color:HG}},{value:8,name:'Product &\nDomain Experts',itemStyle:{color:WATER}},{value:8,name:'Commercial\n& Sales',itemStyle:{color:ENERGY}},{value:4,name:'Customer\nSuccess',itemStyle:{color:ALP}},{value:4,name:'Leadership\n& Operations',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-geo-capacity'));var countries=['China','Brazil','Canada','USA','Russia','India','Norway','Japan','Turkey','Austria'];var gw=[420,109,82,102,55,52,34,50,32,14];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:countries,axisLabel:{fontSize:9,interval:0,rotate:30}},yAxis:{type:'value',name:'GW',axisLabel:{fontSize:10}},series:[{type:'bar',data:gw.map(function(v,i){return{value:v,itemStyle:{color:i===7||i===9||i===6?HG:(i===3?ENERGY:WATER)}}}),label:{show:true,position:'top',fontSize:9,formatter:'{c}'},barWidth:'55%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-market-status'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:45,name:'Alpine\n(Established)',itemStyle:{color:HG}},{value:25,name:'Nordics\n(Growing)',itemStyle:{color:ALP}},{value:15,name:'North America\n(Entering)',itemStyle:{color:ENERGY}},{value:10,name:'S. Europe\n(Target)',itemStyle:{color:WATER}},{value:5,name:'Rest of World\n(Future)',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-roi'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Baseline\nRevenue','Generation\nUplift (+10%)','HYDROGRID\nLicense Cost','Net\nIncremental\nValue'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'€K / year',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:15000,itemStyle:{color:'#e0e0e0'}},{value:1500,itemStyle:{color:POS}},{value:-150,itemStyle:{color:NEG}},{value:1350,itemStyle:{color:HG}}],label:{show:true,position:'top',fontSize:10,formatter:function(p){return (p.value>=0?'€':'−€')+Math.abs(p.value)+'K'}}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-margins'));c.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Revenue\n(100%)','Cloud\nInfra','Customer\nSuccess','Support &\nMaintenance','Gross\nProfit'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'% of Revenue',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:100,itemStyle:{color:HG}},{value:-10,itemStyle:{color:NEG}},{value:-8,itemStyle:{color:ENERGY}},{value:-5,itemStyle:{color:MUT}},{value:77,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'{c}%'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-global-gen'));var countries=['China','Brazil','Canada','USA','Norway','India','Russia','Japan','Turkey','Others'];var twh=[1300,430,380,260,140,170,200,80,80,600];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:countries,axisLabel:{fontSize:9,interval:0,rotate:30}},yAxis:{type:'value',name:'TWh/yr',axisLabel:{fontSize:10}},series:[{type:'bar',data:twh.map(function(v,i){return{value:v,itemStyle:{color:i<3?HG:(i<6?WATER:MUT)}}}),label:{show:true,position:'top',fontSize:8}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-sw-market'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2023','2024','2025','2026E','2028E','2030E'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'$B',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:1.2,itemStyle:{color:'#81d4fa'}},{value:1.5,itemStyle:{color:'#4fc3f7'}},{value:1.9,itemStyle:{color:'#29b6f6'}},{value:2.3,itemStyle:{color:'#039be5'}},{value:3.2,itemStyle:{color:'#0277bd'}},{value:4.1,itemStyle:{color:'#01579b'}}],label:{show:true,position:'top',fontSize:10,formatter:'${c}B'}},{type:'line',data:[1.2,1.5,1.9,2.3,3.2,4.1],smooth:true,lineStyle:{color:DARK,width:2,type:'dashed'},itemStyle:{color:DARK},symbol:'none'}]});window.addEventListener('resize',function(){c.resize()})})();
+</script>
+</body>
+</html>
