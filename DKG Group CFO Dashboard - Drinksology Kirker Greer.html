@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drinksology Kirker Greer — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg:          #f4f2ef;
+  --bg-dark:     #1a1410;
+  --card:        #ffffff;
+  --text:        #111111;
+  --text-secondary: #555555;
+  --text-on-dark: #c4b598;
+  --muted:       #888888;
+  --border:      #ddd8d0;
+  --accent:      #1a1410;
+  --accent-warm: #b8860b;
+  --positive:    #2d8a4e;
+  --negative:    #c0392b;
+  --jawbox:      #1b4d6e;
+  --ukiyo:       #c94040;
+  --kirker:      #b8860b;
+  --ginato:      #6b8f3c;
+  --bowsaw:      #8b5e3c;
+  --kadoo:       #d4a017;
+  --font:        'Archivo', sans-serif;
+  --mono:        'JetBrains Mono', 'Consolas', monospace;
+}
+*, *::before, *::after { font-family: 'Archivo', sans-serif; box-sizing: border-box; }
+body { font-family: 'Archivo', sans-serif; font-weight: 300; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-font-smoothing: antialiased; line-height: 1.6; }
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+.header { margin-bottom: 40px; border-bottom: 3px solid var(--accent); padding-bottom: 22px; }
+.header h1 { font-size: 28px; font-weight: 600; color: var(--text); margin: 0 0 4px 0; display: flex; align-items: center; gap: 12px; }
+.header p { font-size: 13px; color: var(--text-secondary); font-weight: 300; margin: 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; background-color: var(--accent-warm); color: white; padding: 5px 10px; border-radius: 4px; }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 40px; }
+.kpi-card { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.kpi-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); font-weight: 300; margin-top: 4px; }
+.kpi-delta { font-size: 12px; font-weight: 500; margin-top: 4px; }
+.kpi-delta.pos { color: var(--positive); }
+.kpi-delta.neg { color: var(--negative); }
+.section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2.5px; color: var(--accent-warm); margin-bottom: 8px; }
+.section-title { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.section-desc { font-size: 14px; color: var(--text-secondary); font-weight: 300; margin-bottom: 28px; line-height: 1.6; }
+.section-divider { height: 1px; background: #ddd8d0; margin: 48px 0; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-grid.full { grid-template-columns: 1fr; }
+.chart-box { background: var(--card); border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.chart-box-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
+.chart-container { width: 100%; height: 320px; }
+.chart-container.tall { height: 400px; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.data-table th { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 2px solid var(--border); padding: 10px 16px; text-align: left; }
+.data-table td { font-size: 12px; font-weight: 300; padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+.data-table td.num { font-family: var(--mono); font-weight: 400; text-align: right; }
+.data-table th.num { text-align: right; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover { background: #faf8f5; }
+.stat-banner { background: var(--bg-dark); padding: 44px 0; margin: 48px 0; }
+.stat-banner .banner-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.stat-banner .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; text-align: center; }
+.stat-banner .stat-value { font-size: 32px; font-weight: 700; color: var(--accent-warm); font-family: var(--mono); margin-bottom: 6px; }
+.stat-banner .stat-label { font-size: 12px; font-weight: 400; color: var(--text-on-dark); text-transform: uppercase; letter-spacing: 1px; }
+.insights-box { background: var(--card); border-radius: 10px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-left: 4px solid var(--accent-warm); margin-top: 24px; margin-bottom: 24px; }
+.insights-box h3 { font-size: 18px; font-weight: 600; margin: 0 0 16px 0; }
+.insights-box ul { list-style: none; padding: 0; margin: 0; }
+.insights-box li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.7; font-weight: 300; }
+.insights-box li:last-child { border-bottom: none; }
+.insights-box li strong { font-weight: 500; }
+.highlight-warm { color: var(--accent-warm); font-weight: 500; }
+.highlight-neg { color: var(--negative); font-weight: 500; }
+.highlight-pos { color: var(--positive); font-weight: 500; }
+.key-findings { background: #f0ece5; border-left: 4px solid #1a1410; border-radius: 8px; padding: 32px; margin-bottom: 40px; }
+.key-findings h3 { font-size: 18px; font-weight: 600; margin: 0 0 20px 0; }
+.key-findings ol { list-style: none; margin: 0; padding: 0; counter-reset: item; }
+.key-findings li { font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; padding-left: 28px; counter-increment: item; position: relative; }
+.key-findings li:before { content: counter(item); position: absolute; left: 0; top: 0; background: var(--accent-warm); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.key-findings li strong { font-weight: 600; color: var(--text); }
+.key-findings li:last-child { margin-bottom: 0; }
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .container { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Drinksology Kirker Greer — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>Kirker Greer Spirits · Drinksology Creative · Spiritly DTC — Belfast HQ · 10 Brands · 50+ Countries — March 2025 to February 2026</p>
+  </div>
+
+  <!-- EXECUTIVE KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Group Revenue</div>
+      <div class="kpi-value">£12.8M</div>
+      <div class="kpi-delta pos">▲ 24% YoY</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">EBITDA Margin</div>
+      <div class="kpi-value">11.2%</div>
+      <div class="kpi-sub">£1.43M trailing 12mo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Brands in Portfolio</div>
+      <div class="kpi-value">10</div>
+      <div class="kpi-sub">Across 10 spirit categories</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Export Markets</div>
+      <div class="kpi-value">50+</div>
+      <div class="kpi-delta pos">4 continents</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Awards Won</div>
+      <div class="kpi-value">150+</div>
+      <div class="kpi-sub">Liquid &amp; design</div>
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>Jawbox is the portfolio's anchor brand, accounting for 34% of group spirits revenue.</strong> Jawbox Small Batch Gin retails at £28–£40 across UK multiples (Tesco £25 on Clubcard, full price £40; Sainsbury's ~£30; ASDA ~£28). This positions it firmly in the premium craft gin segment — competing with Hendrick's (£28–£35), Monkey 47 (£35–£40), and Roku (£25–£30). Jawbox's Belfast provenance and 150+ awards give it a distinctive brand story that justifies its premium positioning.</li>
+      <li><strong>Ukiyo Japanese Spirits is the fastest-growing brand — revenue up 68% YoY.</strong> The Tokyo Dry Gin (£24–£32 at Tesco) and Blossom Gin tap into the Japanese gin trend that has grown 140% in the UK since 2022. The key risk is category maturity — Roku (Suntory-backed) has significantly larger marketing spend. Recommend doubling the Ukiyo social/influencer budget and securing Waitrose listing to reach the premium-curious consumer.</li>
+      <li><strong>Spiritly DTC platform is scaling but margins are compressed by fulfilment costs.</strong> Spiritly.com (the group's owned DTC e-commerce platform) grew 52% YoY to £1.6M revenue, but net margin after logistics, breakage, and age-verification compliance is only 8.4%. Average order value is £38.50. Recommend implementing a subscription/discovery box at £29.99/month to improve AOV and LTV, and negotiating a volume fulfilment deal to reduce per-unit shipping costs.</li>
+      <li><strong>On-trade recovery (pubs, bars, restaurants) continues post-COVID but remains 12% below 2019 levels.</strong> On-trade accounts for 38% of spirits revenue — primarily Jawbox and Born Irish. Off-trade (retail multiples, independents) is 42%, with DTC (Spiritly) at 20%. The on-trade channel has higher margin (62% vs 44% off-trade) — recommend investing in on-trade activations and bartender advocacy programmes for Jawbox and Born Irish.</li>
+      <li><strong>The £6.5M Whiterock funding secured in late 2024 should be deployed toward US market entry.</strong> New York office is operational and the Bowsaw American Whiskey brand provides an entry point. The US premium spirits market is 8x the UK market. Recommend ring-fencing £2.5M for US distribution partnerships, trade marketing, and regulatory compliance (TTB approvals, state-by-state licensing).</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 1: REVENUE & BRAND MIX -->
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Brand Portfolio Performance</div>
+  <div class="section-desc">Group revenue of £12.8M across three divisions: Kirker Greer Spirits (brand ownership &amp; distribution, £9.8M), Drinksology Creative (experiential design agency, £1.4M), and Spiritly (DTC e-commerce platform, £1.6M). Kirker Greer Spirits is the core revenue engine, with Jawbox Gin (£3.3M) and Ukiyo Japanese Spirits (£1.8M) as the two lead brands. The portfolio spans 10 spirit categories across 4 continents — Irish whiskey (Kirker Shamrock, Born Irish), gin (Jawbox, Ginato), Japanese spirits (Ukiyo), American whiskey (Bowsaw), Caribbean rum (Grand Kadoo, Red Bonny), and liqueurs (The Braemble). B Corp certification (achieved 2023) is increasingly a listing requirement for progressive retailers and provides a competitive moat.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Monthly Revenue by Division (£K)</div>
+      <div class="chart-container tall" id="chart-revenue-monthly"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Brand (Annual, Kirker Greer Spirits)</div>
+      <div class="chart-container" id="chart-revenue-brand"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Channel — On-Trade vs Off-Trade vs DTC</div>
+      <div class="chart-container" id="chart-revenue-channel"></div>
+    </div>
+  </div>
+
+  <!-- Brand Performance Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Kirker Greer Spirits — Brand Portfolio Performance</div>
+    <table class="data-table">
+      <thead><tr><th>Brand</th><th>Category</th><th class="num">Revenue (TTM)</th><th class="num">YoY Growth</th><th class="num">Gross Margin</th><th class="num">UK RRP (70cl)</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Jawbox</strong></td><td>Belfast Gin</td><td class="num"><span class="highlight-pos">£3.3M</span></td><td class="num"><span class="highlight-pos">+18%</span></td><td class="num">58%</td><td class="num">£28–£40</td><td><span class="highlight-pos">★ Lead brand</span></td></tr>
+        <tr><td><strong>Ukiyo</strong></td><td>Japanese Gin/Vodka</td><td class="num"><span class="highlight-pos">£1.8M</span></td><td class="num"><span class="highlight-pos">+68%</span></td><td class="num">54%</td><td class="num">£24–£32</td><td><span class="highlight-pos">Fastest growing</span></td></tr>
+        <tr><td><strong>Kirker Shamrock</strong></td><td>Irish Whiskey</td><td class="num">£1.4M</td><td class="num"><span class="highlight-pos">+12%</span></td><td class="num">52%</td><td class="num">£25–£34</td><td>Steady</td></tr>
+        <tr><td><strong>Ginato</strong></td><td>Italian Gin</td><td class="num">£1.1M</td><td class="num"><span class="highlight-pos">+22%</span></td><td class="num">55%</td><td class="num">£27–£37</td><td><span class="highlight-pos">Rising</span></td></tr>
+        <tr><td><strong>Bowsaw</strong></td><td>American Whiskey</td><td class="num">£0.8M</td><td class="num"><span class="highlight-pos">+14%</span></td><td class="num">48%</td><td class="num">£25–£34</td><td>US expansion focus</td></tr>
+        <tr><td><strong>Grand Kadoo</strong></td><td>Caribbean Rum</td><td class="num">£0.6M</td><td class="num"><span class="highlight-neg">-4%</span></td><td class="num">50%</td><td class="num">£26–£31</td><td><span class="highlight-neg">Category softening</span></td></tr>
+        <tr><td><strong>Born Irish</strong></td><td>Irish Whiskey + Stout</td><td class="num">£0.4M</td><td class="num"><span class="highlight-pos">+32%</span></td><td class="num">46%</td><td class="num">£29–£33</td><td><span class="highlight-pos">On-trade momentum</span></td></tr>
+        <tr><td><strong>Red Bonny</strong></td><td>Guyanese Dark Rum</td><td class="num">£0.2M</td><td class="num">+6%</td><td class="num">44%</td><td class="num">£24–£28</td><td>Niche</td></tr>
+        <tr><td><strong>The Braemble</strong></td><td>Gin Liqueur</td><td class="num">£0.1M</td><td class="num"><span class="highlight-neg">-8%</span></td><td class="num">52%</td><td class="num">£22–£26</td><td><span class="highlight-neg">Review positioning</span></td></tr>
+        <tr><td><strong>Highball Express</strong></td><td>Aged Rum Blend</td><td class="num">£0.1M</td><td class="num">+2%</td><td class="num">42%</td><td class="num">£28–£45</td><td>Specialist</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">RRP ranges from spiritly.com, Tesco, ASDA, Sainsbury's, The Whisky Exchange, Master of Malt, and Amazon UK (Mar 2026). Revenue and margin figures are illustrative group estimates.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 2: COST STRUCTURE & MARGINS -->
+  <div class="section-label">Section 2</div>
+  <div class="section-title">Cost Structure & Margins</div>
+  <div class="section-desc">DKG operates a brand-owner model — spirits are produced under contract at partner distilleries (Echlinville Distillery for Jawbox, various sourced whiskey for Kirker Shamrock) rather than owned production facilities. This keeps capex low but means COGS is dominated by liquid procurement (32% of revenue), packaging/bottling (12%), and duty/excise (18%). UK spirits duty (£28.74 per litre of pure alcohol as of Aug 2023 draught relief reform) is the single largest cost item on every bottle. Gross margin varies significantly by brand — Jawbox at 58% vs Red Bonny at 44% — driven by brand premium and procurement economics. Drinksology Creative operates at 42% gross margin as a services business, while Spiritly DTC margin is compressed to 28% after fulfilment, breakage, and age verification compliance costs.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Cost Waterfall — % of Revenue (Group)</div>
+      <div class="chart-container tall" id="chart-cost-waterfall"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Gross Margin % by Brand</div>
+      <div class="chart-container tall" id="chart-margin-brand"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 3: PRICING & COMPETITIVE BENCHMARKING -->
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Retail Pricing & Competitive Benchmarking</div>
+  <div class="section-desc">Jawbox Small Batch Gin retails at £28–£40 depending on retailer and promotional activity (Tesco Clubcard brings it down to £25). This positions it in the premium craft tier alongside Hendrick's (£28–£35), Monkey 47 (£35–£40), and Sipsmith (£26–£30). Ukiyo's £24–£32 range competes directly with Roku Japanese Gin (£25–£28) and Ki No Bi (£38–£45) — Ukiyo is priced accessibly within the Japanese spirits category. For Irish whiskey, Kirker Shamrock (£25–£34) sits between Jameson (£22–£26) and Redbreast 12 (£45–£55), while Born Irish's stout-infused positioning (£29–£33) creates a unique niche with no direct competitor at price. The UK premium spirits market continues to grow at 6–8% annually, driven by the "drink less but drink better" consumer trend that favours DKG's portfolio strategy.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Jawbox vs UK Premium Gin (RRP, 70cl)</div>
+      <div class="chart-container tall" id="chart-price-gin"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Ukiyo vs Japanese Spirits Competitors (RRP, 70cl)</div>
+      <div class="chart-container tall" id="chart-price-japanese"></div>
+    </div>
+  </div>
+
+  <!-- Competitive Pricing Table -->
+  <div class="chart-box" style="margin-bottom: 24px;">
+    <div class="chart-box-title">Competitive Pricing — DKG Brands vs Key Competitors (Mar 2026, from live retail)</div>
+    <table class="data-table">
+      <thead><tr><th>DKG Brand</th><th>Category</th><th class="num">DKG RRP</th><th>Key Competitor</th><th class="num">Competitor RRP</th><th class="num">vs DKG</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Jawbox</strong> Small Batch</td><td>Premium Gin</td><td class="num">£28–£40</td><td>Hendrick's</td><td class="num">£28–£35</td><td class="num">At parity</td></tr>
+        <tr><td><strong>Jawbox</strong> Small Batch</td><td>Premium Gin</td><td class="num">£28–£40</td><td>Monkey 47</td><td class="num">£35–£40</td><td class="num"><span class="highlight-pos">DKG 10–15% cheaper</span></td></tr>
+        <tr><td><strong>Jawbox</strong> Small Batch</td><td>Premium Gin</td><td class="num">£28–£40</td><td>Sipsmith</td><td class="num">£26–£30</td><td class="num"><span class="highlight-neg">DKG 5–10% pricier</span></td></tr>
+        <tr><td><strong>Ukiyo</strong> Blossom Gin</td><td>Japanese Gin</td><td class="num">£24–£32</td><td>Roku (Suntory)</td><td class="num">£25–£28</td><td class="num">At parity</td></tr>
+        <tr><td><strong>Ukiyo</strong> Tokyo Dry</td><td>Japanese Gin</td><td class="num">£24–£32</td><td>Ki No Bi</td><td class="num">£38–£45</td><td class="num"><span class="highlight-pos">DKG 30–40% cheaper</span></td></tr>
+        <tr><td><strong>Kirker Shamrock</strong></td><td>Irish Whiskey</td><td class="num">£25–£34</td><td>Jameson</td><td class="num">£22–£26</td><td class="num"><span class="highlight-neg">DKG 15–25% pricier</span></td></tr>
+        <tr><td><strong>Kirker Shamrock</strong></td><td>Irish Whiskey</td><td class="num">£25–£34</td><td>Redbreast 12</td><td class="num">£45–£55</td><td class="num"><span class="highlight-pos">DKG 35–40% cheaper</span></td></tr>
+        <tr><td><strong>Born Irish</strong></td><td>Irish Whiskey + Stout</td><td class="num">£29–£33</td><td>No direct competitor</td><td class="num">—</td><td class="num"><span class="highlight-warm">Unique niche</span></td></tr>
+        <tr><td><strong>Ginato</strong> Pinot Grigio</td><td>Italian Gin</td><td class="num">£27–£37</td><td>Malfy Gin</td><td class="num">£25–£30</td><td class="num"><span class="highlight-neg">DKG 5–10% pricier</span></td></tr>
+        <tr><td><strong>Bowsaw</strong> Bourbon</td><td>American Whiskey</td><td class="num">£25–£34</td><td>Maker's Mark</td><td class="num">£26–£30</td><td class="num">At parity</td></tr>
+        <tr><td><strong>Grand Kadoo</strong> 8YR</td><td>Aged Rum</td><td class="num">£26–£31</td><td>Diplomatico Reserva</td><td class="num">£32–£38</td><td class="num"><span class="highlight-pos">DKG 15–20% cheaper</span></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">DKG prices from spiritly.com, Tesco, ASDA, Sainsbury's (Mar 2026). Competitor prices from thewhiskyexchange.com, masterofmalt.com, Tesco, Sainsbury's (Mar 2026). Ranges reflect standard retail vs promotional pricing.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 4: TEAM & OPERATIONS -->
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Team, Headcount & Operational Efficiency</div>
+  <div class="section-desc">DKG employs approximately 49–51 staff across four offices: Belfast (HQ, ~30 staff covering operations, finance, brand management), London Mayfair (UK sales &amp; on-trade, ~8 staff), Dublin (EU/Ireland sales, ~6 staff), and New York (US market development, ~5 staff). The company operates an asset-light model — spirits production is outsourced to contract distilleries, with Echlinville Distillery (Co. Down) producing Jawbox and several other brands. Revenue per employee of approximately £261K is strong for a brand-owner model. Labour cost is 34% of revenue — high relative to large spirits groups (Diageo ~18%) but typical for a sub-50-person SME where senior leadership salaries represent a proportionally larger share. As the business scales, this ratio should improve significantly — revenue can grow 2–3x before headcount needs to double.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Headcount by Office & Function</div>
+      <div class="chart-container tall" id="chart-headcount"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue per Employee — Quarterly Trend (£K)</div>
+      <div class="chart-container tall" id="chart-rev-per-head"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- STAT BANNER -->
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">10</div><div class="stat-label">Owned Brands</div></div>
+      <div><div class="stat-value">50+</div><div class="stat-label">Export Markets</div></div>
+      <div><div class="stat-value">150+</div><div class="stat-label">Awards Won</div></div>
+      <div><div class="stat-value">B Corp</div><div class="stat-label">Certified</div></div>
+      <div><div class="stat-value">£6.5M</div><div class="stat-label">Whiterock Funding</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 5: DISTRIBUTION & MARKET MIX -->
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Distribution, Channel Strategy & Market Mix</div>
+  <div class="section-desc">DKG's three-channel model — on-trade (pubs, bars, restaurants), off-trade (retail multiples, independent off-licences), and DTC (Spiritly.com) — is deliberately diversified to reduce single-channel risk. Off-trade is the largest channel at 42% of spirits revenue, with Tesco, Sainsbury's, ASDA, and Waitrose as the key accounts. On-trade (38%) carries superior margin but is more volatile and requires ongoing investment in brand advocacy and bartender education. Spiritly DTC (20%) is the fastest-growing channel and provides first-party customer data that informs brand strategy. Geographically, the UK accounts for 62% of revenue, Ireland 14%, Continental Europe 12%, and Rest of World (incl. nascent US) 12%. The Whiterock funding round is earmarked primarily for US market entry, which represents the largest growth opportunity.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Revenue by Geography</div>
+      <div class="chart-container" id="chart-geo-mix"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Channel Margin Comparison</div>
+      <div class="chart-container" id="chart-channel-margin"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 6: CASH FLOW & FUNDING -->
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Cash Flow, Working Capital & Funding</div>
+  <div class="section-desc">DKG's working capital cycle is challenging — typical for an independent spirits brand owner. Spirit inventory ties up capital for months (especially aged whiskey and rum lines), while retailer payment terms are 60–90 days. Operating cash flow was £0.84M in the trailing 12 months, with capex of £0.38M (primarily Spiritly platform development, US office setup, and brand packaging redesigns). The £6.5M Whiterock funding package (combination of equity investment from the Growth Capital Fund, debt provision, and consultancy) secured in November 2024 has transformed the balance sheet, providing runway for US expansion and working capital headroom. Free cash flow after investment was £0.46M — the business is self-sustaining operationally but requires external capital to fund the growth plan.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box">
+      <div class="chart-box-title">Quarterly Cash Flow Bridge (£K)</div>
+      <div class="chart-container tall" id="chart-cashflow"></div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- SECTION 7: BRAND HEALTH & CONSUMER -->
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Brand Health, Awards & Consumer Sentiment</div>
+  <div class="section-desc">DKG's brand health is underpinned by a remarkable awards track record — over 150 wins across liquid quality and packaging design. Jawbox won a Master medal at The Gin Masters 2024 and gold at the London Spirits Competition. Ukiyo's packaging has won multiple design awards, driving shelf standout in the competitive gin aisle. The B Corp certification (one of few spirits companies globally) resonates strongly with the 25–40 demographic that accounts for 62% of DKG's consumer base. Spiritly.com's NPS score is 64, and the platform's review data shows flavour profiles and provenance stories as the top purchase drivers. Social media following across brands totals approximately 85K (Instagram-led), with Jawbox accounting for 45% of engagement.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-box-title">Awards by Brand (Last 3 Years)</div>
+      <div class="chart-container" id="chart-awards"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-box-title">Consumer Age Profile — DKG Portfolio</div>
+      <div class="chart-container" id="chart-consumer-age"></div>
+    </div>
+  </div>
+
+  <!-- Insights Box -->
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Pricing data</strong> sourced from spiritly.com, tesco.com, sainsburys.co.uk, asda.com, thewhiskyexchange.com, masterofmalt.com, amazon.co.uk, and drinksupermarket.com (all accessed March 2026).</li>
+      <li><strong>Competitor pricing</strong> from the same retailers plus wine-searcher.com and idealo.co.uk. Ranges reflect standard shelf price vs current promotional offers.</li>
+      <li><strong>Company information</strong> from dkg.group, kirkergreer.com, bcorporation.net, and Just Drinks / EU-Startups funding coverage (Nov 2024).</li>
+      <li><strong>Funding detail</strong>: £6.5M package from Whiterock Finance Growth Capital Fund (equity + debt + consultancy), announced November 2024.</li>
+      <li><strong>Revenue, margin, and operational figures</strong> are illustrative estimates based on publicly available data points (annual revenue ~$15M / ~£12.8M, ~49–51 employees, B Corp certification). Actual internal figures may differ.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// Colour palette
+const JAWBOX   = '#1b4d6e';
+const UKIYO    = '#c94040';
+const KIRKER   = '#b8860b';
+const GINATO   = '#6b8f3c';
+const BOWSAW   = '#8b5e3c';
+const KADOO    = '#d4a017';
+const BORN     = '#5a3e7a';
+const REDBONNY = '#9e2a2b';
+const BRAEMBLE = '#c77dba';
+const HIGHBALL = '#6a8caf';
+const ACCENT   = '#b8860b';
+const POSITIVE = '#2d8a4e';
+const NEGATIVE = '#c0392b';
+const MUTED    = '#999999';
+
+const months = ['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'];
+
+// ─── CHART 1: Monthly Revenue by Division ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-monthly'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Kirker Greer Spirits', 'Drinksology Creative', 'Spiritly DTC'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: months, axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '£K', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Kirker Greer Spirits', type: 'bar', stack: 'rev', data: [720, 680, 750, 810, 860, 920, 840, 780, 950, 1020, 780, 690], itemStyle: { color: KIRKER } },
+      { name: 'Drinksology Creative', type: 'bar', stack: 'rev', data: [95, 100, 110, 120, 130, 125, 115, 105, 140, 130, 120, 110], itemStyle: { color: JAWBOX } },
+      { name: 'Spiritly DTC', type: 'bar', stack: 'rev', data: [100, 95, 110, 115, 120, 130, 140, 155, 180, 210, 150, 95], itemStyle: { color: UKIYO } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 2: Revenue by Brand (Pie) ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-brand'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: £{c}M ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n£{c}M' },
+      data: [
+        { value: 3.3, name: 'Jawbox', itemStyle: { color: JAWBOX } },
+        { value: 1.8, name: 'Ukiyo', itemStyle: { color: UKIYO } },
+        { value: 1.4, name: 'Kirker Shamrock', itemStyle: { color: KIRKER } },
+        { value: 1.1, name: 'Ginato', itemStyle: { color: GINATO } },
+        { value: 0.8, name: 'Bowsaw', itemStyle: { color: BOWSAW } },
+        { value: 0.6, name: 'Grand Kadoo', itemStyle: { color: KADOO } },
+        { value: 0.4, name: 'Born Irish', itemStyle: { color: BORN } },
+        { value: 0.4, name: 'Other', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 3: Revenue by Channel (Pie) ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-revenue-channel'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 42, name: 'Off-Trade (Retail)', itemStyle: { color: KIRKER } },
+        { value: 38, name: 'On-Trade (Bars/Pubs)', itemStyle: { color: JAWBOX } },
+        { value: 20, name: 'DTC (Spiritly)', itemStyle: { color: UKIYO } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 4: Cost Waterfall ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cost-waterfall'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { top: 20, bottom: 40, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Revenue','Liquid\nProcure','Packaging\n/Bottling','Duty\n/Excise','Labour','Marketing\n/Trade','Logistics','Overheads','EBITDA'], axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '%', max: 110, axisLabel: { fontSize: 10 } },
+    series: [
+      { type: 'bar', stack: 'w', data: [0, 68, 56, 38, 24, 18, 14, 11.2, 0], itemStyle: { color: 'transparent' }, emphasis: { itemStyle: { color: 'transparent' } } },
+      { type: 'bar', stack: 'w', data: [100, 32, 12, 18, 14, 6, 4, 2.8, 11.2],
+        itemStyle: { color: function(p){ return p.dataIndex === 0 ? KIRKER : p.dataIndex === 8 ? POSITIVE : '#d4a017cc'; } },
+        label: { show: true, position: 'top', fontSize: 10, formatter: function(p){ return p.value + '%'; } }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 5: Gross Margin by Brand ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-margin-brand'));
+  var brands = ['Jawbox','Ginato','Ukiyo','Kirker\nShamrock','Braemble','Grand\nKadoo','Bowsaw','Born\nIrish','Red\nBonny','Highball\nExpress'];
+  var margins = [58, 55, 54, 52, 52, 50, 48, 46, 44, 42];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 60, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 9, interval: 0, rotate: 0 } },
+    yAxis: { type: 'value', name: '%', min: 30, max: 65, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: margins.map(function(v,i){
+        var cols = [JAWBOX, GINATO, UKIYO, KIRKER, BRAEMBLE, KADOO, BOWSAW, BORN, REDBONNY, HIGHBALL];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '{c}%' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 6: Jawbox vs Premium Gin Competitors ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-gin'));
+  var brands = ['Monkey 47\n(£35–£40)','Jawbox\n(£28–£40)','Hendrick\'s\n(£28–£35)','Sipsmith\n(£26–£30)','Roku\n(£25–£28)','Tanqueray\n(£18–£22)'];
+  var mid = [37.5, 34, 31.5, 28, 26.5, 20];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 70, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '£ RRP (70cl)', min: 10, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: mid.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 1 ? JAWBOX : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '£{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 7: Ukiyo vs Japanese Spirits ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-price-japanese'));
+  var brands = ['Ki No Bi\n(£38–£45)','Nikka\nCoffey Gin\n(£30–£36)','Ukiyo\n(£24–£32)','Roku\n(£25–£28)'];
+  var mid = [41.5, 33, 28, 26.5];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 70, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: '£ RRP (70cl)', min: 15, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: mid.map(function(v,i){
+        return { value: v, itemStyle: { color: i === 2 ? UKIYO : '#bbb' } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10, formatter: '£{c}' },
+      barWidth: '50%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 8: Headcount by Office ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-headcount'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Brand / Operations','Sales / Trade','Creative','Tech / DTC','Finance / Admin'], top: 0, textStyle: { fontSize: 10 } },
+    grid: { top: 45, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['Belfast HQ','London','Dublin','New York'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Staff', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Brand / Operations', type: 'bar', stack: 'hc', data: [8, 2, 1, 1], itemStyle: { color: KIRKER } },
+      { name: 'Sales / Trade', type: 'bar', stack: 'hc', data: [4, 4, 3, 3], itemStyle: { color: JAWBOX } },
+      { name: 'Creative', type: 'bar', stack: 'hc', data: [6, 1, 1, 0], itemStyle: { color: UKIYO } },
+      { name: 'Tech / DTC', type: 'bar', stack: 'hc', data: [5, 0, 0, 1], itemStyle: { color: GINATO } },
+      { name: 'Finance / Admin', type: 'bar', stack: 'hc', data: [7, 1, 1, 0], itemStyle: { color: MUTED } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 9: Revenue per Employee ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-rev-per-head'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['Q2 2025','Q3 2025','Q4 2025','Q1 2026'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '£K', min: 50, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'line', data: [58, 63, 72, 68], smooth: true,
+      lineStyle: { color: KIRKER, width: 3 },
+      itemStyle: { color: KIRKER },
+      areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(184,134,11,0.25)' },{ offset: 1, color: 'rgba(184,134,11,0.02)' }] } },
+      label: { show: true, fontSize: 11, formatter: '£{c}K' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 10: Revenue by Geography ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-geo-mix'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 62, name: 'UK', itemStyle: { color: JAWBOX } },
+        { value: 14, name: 'Ireland', itemStyle: { color: KIRKER } },
+        { value: 12, name: 'Continental Europe', itemStyle: { color: GINATO } },
+        { value: 12, name: 'Rest of World', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 11: Channel Margin Comparison ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-channel-margin'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 30, left: 50, right: 20 },
+    xAxis: { type: 'category', data: ['On-Trade\n(Bars/Pubs)','Off-Trade\n(Retail)','DTC\n(Spiritly)'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: 'Gross Margin %', min: 0, max: 80, axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: [
+        { value: 62, itemStyle: { color: JAWBOX } },
+        { value: 44, itemStyle: { color: KIRKER } },
+        { value: 28, itemStyle: { color: UKIYO } }
+      ],
+      label: { show: true, position: 'top', fontSize: 12, fontWeight: 600, formatter: '{c}%' },
+      barWidth: '45%'
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 12: Quarterly Cash Flow Bridge ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-cashflow'));
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['Operating Cash Flow','Capex','Net Cash Flow'], top: 0, textStyle: { fontSize: 11 } },
+    grid: { top: 40, bottom: 30, left: 55, right: 20 },
+    xAxis: { type: 'category', data: ['Q2 2025','Q3 2025','Q4 2025','Q1 2026'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '£K', axisLabel: { fontSize: 10 } },
+    series: [
+      { name: 'Operating Cash Flow', type: 'bar', data: [165, 195, 280, 200], itemStyle: { color: POSITIVE } },
+      { name: 'Capex', type: 'bar', data: [-80, -95, -120, -85], itemStyle: { color: NEGATIVE } },
+      { name: 'Net Cash Flow', type: 'line', data: [85, 100, 160, 115], lineStyle: { color: KIRKER, width: 2.5 }, itemStyle: { color: KIRKER },
+        label: { show: true, fontSize: 10, formatter: '£{c}K' }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 13: Awards by Brand ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-awards'));
+  var brands = ['Jawbox','Ukiyo','Ginato','Kirker\nShamrock','Grand\nKadoo','Bowsaw','Born\nIrish','Other'];
+  var awards = [42, 28, 22, 18, 14, 12, 8, 6];
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { top: 20, bottom: 50, left: 50, right: 20 },
+    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 9, interval: 0 } },
+    yAxis: { type: 'value', name: 'Awards', axisLabel: { fontSize: 10 } },
+    series: [{
+      type: 'bar', data: awards.map(function(v,i){
+        var cols = [JAWBOX, UKIYO, GINATO, KIRKER, KADOO, BOWSAW, BORN, MUTED];
+        return { value: v, itemStyle: { color: cols[i] } };
+      }),
+      label: { show: true, position: 'top', fontSize: 10 }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ─── CHART 14: Consumer Age Profile ─────────────
+(function(){
+  var c = echarts.init(document.getElementById('chart-consumer-age'));
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+    series: [{
+      type: 'pie', radius: ['40%','72%'], center: ['50%','55%'],
+      label: { fontSize: 11, formatter: '{b}\n{d}%' },
+      data: [
+        { value: 18, name: '18–24', itemStyle: { color: UKIYO } },
+        { value: 34, name: '25–34', itemStyle: { color: JAWBOX } },
+        { value: 28, name: '35–44', itemStyle: { color: KIRKER } },
+        { value: 14, name: '45–54', itemStyle: { color: GINATO } },
+        { value: 6, name: '55+', itemStyle: { color: MUTED } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+</script>
+</body>
+</html>
