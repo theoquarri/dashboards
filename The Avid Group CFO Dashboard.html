@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Avid Group — CFO Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f3f5f8;--bg-dark:#1a1a1a;--card:#fff;--text:#111;--text-secondary:#555;--text-on-dark:#b0b8c8;--muted:#888;--border:#dde2ea;--accent:#1a1a1a;--positive:#2d8a4e;--negative:#c0392b;--av-primary:#1a1a1a;--av-accent:#e85d4a;--av-warm:#f4a623;--av-teal:#00897b;--av-blue:#1565c0;--font:'Archivo',sans-serif;--mono:'JetBrains Mono','Consolas',monospace}
+*,*::before,*::after{font-family:'Archivo',sans-serif;box-sizing:border-box}
+body{font-family:'Archivo',sans-serif;font-weight:300;background:var(--bg);color:var(--text);margin:0;padding:0;-webkit-font-smoothing:antialiased;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:40px 32px}
+.header{margin-bottom:40px;border-bottom:3px solid var(--av-primary);padding-bottom:22px}
+.header h1{font-size:28px;font-weight:600;color:var(--text);margin:0 0 4px 0;display:flex;align-items:center;gap:12px}
+.header p{font-size:13px;color:var(--text-secondary);font-weight:300;margin:0}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;background-color:var(--av-primary);color:#fff;padding:5px 10px;border-radius:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:40px}
+.kpi-card{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.kpi-sub{font-size:12px;color:var(--text-secondary);font-weight:300;margin-top:4px}
+.kpi-delta{font-size:12px;font-weight:500;margin-top:4px}
+.kpi-delta.pos{color:var(--positive)}
+.kpi-delta.neg{color:var(--negative)}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:2.5px;color:var(--av-accent);margin-bottom:8px}
+.section-title{font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--text-secondary);font-weight:300;margin-bottom:28px;line-height:1.6}
+.section-divider{height:1px;background:var(--border);margin:48px 0}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-grid.full{grid-template-columns:1fr}
+.chart-box{background:var(--card);border-radius:10px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-box-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:16px}
+.chart-container{width:100%;height:320px}
+.chart-container.tall{height:400px}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--border);padding:10px 16px;text-align:left}
+.data-table td{font-size:12px;font-weight:300;padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table td.num{font-family:var(--mono);font-weight:400;text-align:right}
+.data-table th.num{text-align:right}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:#f6f8fb}
+.stat-banner{background:var(--bg-dark);padding:44px 0;margin:48px 0}
+.stat-banner .banner-inner{max-width:1100px;margin:0 auto;padding:0 32px}
+.stat-banner .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;text-align:center}
+.stat-banner .stat-value{font-size:32px;font-weight:700;color:var(--av-accent);font-family:var(--mono);margin-bottom:6px}
+.stat-banner .stat-label{font-size:12px;font-weight:400;color:var(--text-on-dark);text-transform:uppercase;letter-spacing:1px}
+.key-findings{background:#fce8e6;border-left:4px solid var(--av-accent);border-radius:8px;padding:32px;margin-bottom:40px}
+.key-findings h3{font-size:18px;font-weight:600;margin:0 0 20px 0}
+.key-findings ol{list-style:none;margin:0;padding:0;counter-reset:item}
+.key-findings li{font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;padding-left:28px;counter-increment:item;position:relative}
+.key-findings li:before{content:counter(item);position:absolute;left:0;top:0;background:var(--av-accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+.key-findings li strong{font-weight:600;color:var(--text)}
+.key-findings li:last-child{margin-bottom:0}
+.insights-box{background:var(--card);border-radius:10px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);border-left:4px solid var(--av-accent);margin-top:24px;margin-bottom:24px}
+.insights-box h3{font-size:18px;font-weight:600;margin:0 0 16px 0}
+.insights-box ul{list-style:none;padding:0;margin:0}
+.insights-box li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.7;font-weight:300}
+.insights-box li:last-child{border-bottom:none}
+.insights-box li strong{font-weight:500}
+.highlight-pos{color:var(--positive);font-weight:500}
+.highlight-neg{color:var(--negative);font-weight:500}
+@media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:24px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>The Avid Group — CFO Analytics Dashboard <span class="badge">Draft</span></h1>
+    <p>End-to-End Apparel Solutions · Design · Manufacturing · DTC &amp; Wholesale · Licensed IP · Founded 2008 · Toronto &amp; Santa Monica — ~50 Employees — March 2025 to February 2026</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Revenue (Est.)</div><div class="kpi-value">$11.2M</div><div class="kpi-delta pos">▲ DTC + Wholesale growth</div></div>
+    <div class="kpi-card"><div class="kpi-label">Channels</div><div class="kpi-value">DTC + WHS</div><div class="kpi-sub">Shopify + 6+ retail partners</div></div>
+    <div class="kpi-card"><div class="kpi-label">Employees</div><div class="kpi-value">~50</div><div class="kpi-sub">Toronto · Santa Monica · Buffalo</div></div>
+    <div class="kpi-card"><div class="kpi-label">Retail Partners</div><div class="kpi-value">6+</div><div class="kpi-sub">Pacsun, Zumiez, Winners…</div></div>
+    <div class="kpi-card"><div class="kpi-label">Licensed IP</div><div class="kpi-value">5+</div><div class="kpi-sub">Universal, Lucasfilm, UFC…</div></div>
+  </div>
+
+  <div class="key-findings">
+    <h3>Key Findings & Recommended Actions</h3>
+    <ol>
+      <li><strong>Vertically integrated model is a competitive moat — but the CFO challenge is understanding margin contribution across channels.</strong> Revenue flows through DTC, wholesale (Pacsun, Zumiez, Winners, Nordstrom, Scheels, Buckle, Boathouse), licensed IP (Universal, Lucasfilm, UFC, Live Nation, Tim Hortons), and university/corporate programmes. A unified view of profitability by channel, brand, and product is the critical gap.</li>
+      <li><strong>DTC is the highest-margin channel but requires disciplined drop execution.</strong> Conversion rate, AOV, CAC, and repeat purchase rate determine whether DTC is a profit engine or a cost centre. Precise inventory planning per drop is essential to avoid stockouts and markdown risk.</li>
+      <li><strong>Wholesale is predictable but margin-compressed — which partners generate the best return on complexity?</strong> Sell-through rate by partner is the key metric. Partners with high sell-through and fast payment justify the operational overhead; those with high markdowns and slow payment do not.</li>
+      <li><strong>Licensed IP drives demand but carries operational risk.</strong> Each licensor (Universal, Lucasfilm, UFC, Live Nation) has strict approval processes, compliance requirements, and royalty structures. Late approvals delay production; compliance failures risk licence revocation.</li>
+      <li><strong>In-house production from Toronto/Buffalo is a supply chain advantage — but capacity utilisation drives unit economics.</strong> Screen-printing, embroidery, sewing, digital print, and finishing (MOQ 144 units) enable fast turnaround. Production lines must run at 70%+ utilisation to achieve target unit costs.</li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 1</div>
+  <div class="section-title">Revenue & Channel Performance</div>
+  <div class="section-desc">Estimated annual revenue of ~$11.2M across DTC (Shopify), wholesale, licensed IP, and corporate/university programmes. DTC carries 60–70% gross margins vs wholesale at 35–45%. Q4 (back-to-school + holiday) drives 30–35% of annual revenue, making seasonal forecasting and planning cycles critical.</div>
+
+  <div class="chart-grid full">
+    <div class="chart-box"><div class="chart-box-title">Estimated Quarterly Revenue by Channel ($K)</div><div class="chart-container tall" id="chart-revenue-q"></div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue Mix by Channel</div><div class="chart-container" id="chart-channel-mix"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Gross Margin by Channel (Est. %)</div><div class="chart-container" id="chart-margins"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 2</div>
+  <div class="section-title">DTC & E-Commerce Performance</div>
+  <div class="section-desc">DTC operates through Shopify with drop-based merchandising driving urgency and sell-through. Key metrics: conversion rate (2–4% benchmark), AOV, CAC, and repeat purchase rate. Launch readiness — coordinating site merchandising, inventory allocation, and marketing — determines whether each drop hits its revenue target.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">DTC Funnel — Conversion Metrics (Est.)</div><div class="chart-container tall" id="chart-dtc-funnel"></div></div>
+    <div class="chart-box"><div class="chart-box-title">AOV & Conversion Trend</div><div class="chart-container tall" id="chart-aov"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 3</div>
+  <div class="section-title">Wholesale & Retail Partners</div>
+  <div class="section-desc">Wholesale spans Pacsun, Zumiez, Buckle, Nordstrom, Scheels, Boathouse, and Winners/TJ Maxx — each with distinct EDI, compliance, and payment requirements (net 30–60). Monitoring sell-through, feedback, and in-market performance in real time enables assortment adaptation mid-season rather than after the fact.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue by Retail Partner (Est. $K)</div><div class="chart-container tall" id="chart-wholesale"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Sell-Through Rate by Partner (Est. %)</div><div class="chart-container tall" id="chart-sellthrough"></div></div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:24px;">
+    <div class="chart-box-title">Retail Partner Performance Matrix</div>
+    <table class="data-table">
+      <thead><tr><th>Partner</th><th>Channel</th><th class="num">Est. Revenue</th><th class="num">Sell-Through</th><th class="num">Payment Terms</th><th>Categories</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pacsun</strong></td><td>US Specialty</td><td class="num">$1.2M</td><td class="num"><span class="highlight-pos">78%</span></td><td class="num">Net 30</td><td>Streetwear, licensed IP</td></tr>
+        <tr><td><strong>Zumiez</strong></td><td>US Specialty</td><td class="num">$850K</td><td class="num"><span class="highlight-pos">75%</span></td><td class="num">Net 30</td><td>Action sports, youth</td></tr>
+        <tr><td><strong>Winners / TJ Maxx</strong></td><td>Off-Price (CA/US)</td><td class="num">$900K</td><td class="num"><span class="highlight-pos">92%</span></td><td class="num">Net 30</td><td>Overstock, value</td></tr>
+        <tr><td><strong>Nordstrom</strong></td><td>US Department</td><td class="num">$600K</td><td class="num">65%</td><td class="num">Net 60</td><td>Premium, licensed</td></tr>
+        <tr><td><strong>Scheels</strong></td><td>US Sporting</td><td class="num">$450K</td><td class="num">70%</td><td class="num">Net 45</td><td>Outdoor, lifestyle</td></tr>
+        <tr><td><strong>Buckle</strong></td><td>US Specialty</td><td class="num">$400K</td><td class="num">72%</td><td class="num">Net 30</td><td>Denim, casual</td></tr>
+        <tr><td><strong>Boathouse</strong></td><td>Canadian Specialty</td><td class="num">$350K</td><td class="num"><span class="highlight-pos">80%</span></td><td class="num">Net 30</td><td>Streetwear, campus</td></tr>
+        <tr><td><strong>Urban Outfitters</strong></td><td>US Lifestyle</td><td class="num">$300K</td><td class="num">68%</td><td class="num">Net 45</td><td>Trend, licensed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 4</div>
+  <div class="section-title">Licensing & IP Portfolio</div>
+  <div class="section-desc">Licensing partners include Universal, Lucasfilm (Star Wars, Indiana Jones), UFC, Live Nation, and Tim Hortons. Each carries royalty structures (typically 8–15% of wholesale), minimum guarantees, and strict multi-stage approval processes. Missing a film release window or tour date means lost revenue.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Revenue by Licensing Partner (Est. $K)</div><div class="chart-container" id="chart-licensing"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Licensing Pipeline — Approval Status</div><div class="chart-container" id="chart-approvals"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 5</div>
+  <div class="section-title">Production, Operations & Cost Structure</div>
+  <div class="section-desc">In-house production from Toronto (manufacturing) and Buffalo (US distribution) handles screen-printing, embroidery, sewing, digital print, finishing, and packing at MOQ 144 units. Tracking buy approval through final delivery — and surfacing risks early — protects retail launch windows and DTC drops. COGS: raw materials ~35%, production labour ~20%, overhead ~10%.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Cost Structure — % of Revenue</div><div class="chart-container tall" id="chart-costs"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Production Capacity Utilisation (Est. %)</div><div class="chart-container tall" id="chart-utilisation"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+</div>
+
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="stats-row">
+      <div><div class="stat-value">$11.2M</div><div class="stat-label">Revenue</div></div>
+      <div><div class="stat-value">DTC + WHS</div><div class="stat-label">Dual Channel</div></div>
+      <div><div class="stat-value">5+</div><div class="stat-label">Major Licences</div></div>
+      <div><div class="stat-value">6+</div><div class="stat-label">Retail Partners</div></div>
+      <div><div class="stat-value">3</div><div class="stat-label">Offices (CA/US)</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-label">Section 6</div>
+  <div class="section-title">Team, Funding & Growth Strategy</div>
+  <div class="section-desc">Founded 2008 in Toronto, ~50 employees across Toronto (HQ/manufacturing), Santa Monica (US HQ), and Buffalo (US distribution). Investment from Alignvest + EGADS Group (August 2021) for US expansion. Scaling requires standardised brand operations, repeatable launch/drop processes, and integrated reporting across Shopify, Monday.com, and EDI.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Team Structure (Est.)</div><div class="chart-container" id="chart-team"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Revenue Growth Trajectory (Est. $M)</div><div class="chart-container" id="chart-growth"></div></div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-label">Section 7</div>
+  <div class="section-title">Line Planning, Inventory & Seasonality</div>
+  <div class="section-desc">Seasonal assortment planning must balance DTC demand, wholesale sell-in commitments, inventory risk, and margin targets across product categories. Q4 drives 30–35% of annual revenue, requiring inventory build well ahead of peak. Connecting sell-through velocity with production schedules and channel allocation enables disciplined buy decisions and reduces markdown risk.</div>
+
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-box-title">Seasonal Revenue Pattern (Est. $K/month)</div><div class="chart-container" id="chart-seasonality"></div></div>
+    <div class="chart-box"><div class="chart-box-title">Inventory Turns by Category (Est.)</div><div class="chart-container" id="chart-turns"></div></div>
+  </div>
+
+  <div class="insights-box">
+    <h3>Data Sources & Notes</h3>
+    <ul>
+      <li><strong>Revenue</strong>: ~$11.2M estimated from Owler / ZoomInfo (2025). Channel and partner breakdowns are illustrative estimates based on industry benchmarks for mid-size apparel companies.</li>
+      <li><strong>Company info</strong>: Founded 2008, Toronto. Offices: Toronto (HQ/manufacturing), Santa Monica (US HQ), Buffalo (US distribution). From theavidgroup.com.</li>
+      <li><strong>Employees</strong>: ~44–54 from CBInsights, RocketReach, Apollo profiles (2025).</li>
+      <li><strong>Funding</strong>: Investment from Alignvest Management Corporation + EGADS Group (August 2021) from Crunchbase.</li>
+      <li><strong>Partners</strong>: Universal, Lucasfilm, Tim Hortons, UFC, Live Nation, PacSun, Zumiez, Urban Outfitters, Winners/TJ Maxx from theavidgroup.com partner logos.</li>
+      <li><strong>Services</strong>: Design, manufacturing, marketing, brand management, e-commerce, wholesale, warehousing, fulfillment, customer service. Shopify Partner. MOQ 144 units from theavidgroup.com/pages/services.</li>
+      <li><strong>Margin, cost structure, sell-through, and operational estimates</strong> are illustrative based on industry benchmarks for vertically integrated mid-size apparel companies. Actual internal figures may differ materially.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+var AV='#1a1a1a',ACC='#e85d4a',WARM='#f4a623',TEAL='#00897b',BLUE='#1565c0',POS='#2d8a4e',NEG='#c0392b',MUT='#999';
+
+(function(){var c=echarts.init(document.getElementById('chart-revenue-q'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['DTC','Wholesale','Licensed IP','Corporate/Uni'],top:0,textStyle:{fontSize:10}},grid:{top:40,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Q2 25','Q3 25','Q4 25','Q1 26'],axisLabel:{fontSize:11}},yAxis:{type:'value',name:'$K',axisLabel:{fontSize:10}},series:[{name:'DTC',type:'bar',stack:'rev',data:[650,720,1100,580],itemStyle:{color:ACC}},{name:'Wholesale',type:'bar',stack:'rev',data:[900,1050,1400,750],itemStyle:{color:AV}},{name:'Licensed IP',type:'bar',stack:'rev',data:[400,480,650,350],itemStyle:{color:WARM}},{name:'Corporate/Uni',type:'bar',stack:'rev',data:[250,300,400,200],itemStyle:{color:TEAL},label:{show:true,position:'top',fontSize:9,formatter:function(p){var totals=[2200,2550,3550,1880];return '$'+totals[p.dataIndex]+'K'}}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-channel-mix'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:38,name:'Wholesale',itemStyle:{color:AV}},{value:28,name:'DTC /\nE-Commerce',itemStyle:{color:ACC}},{value:20,name:'Licensed\nIP',itemStyle:{color:WARM}},{value:14,name:'Corporate\n& University',itemStyle:{color:TEAL}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-margins'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['DTC /\nE-Commerce','Licensed\nIP','Corporate\n& University','Wholesale\n(Specialty)','Wholesale\n(Off-Price)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Gross Margin %',max:80,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:65,itemStyle:{color:POS}},{value:55,itemStyle:{color:WARM}},{value:50,itemStyle:{color:TEAL}},{value:42,itemStyle:{color:AV}},{value:28,itemStyle:{color:MUT}}],label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-dtc-funnel'));c.setOption({tooltip:{trigger:'item'},series:[{type:'funnel',left:'10%',top:20,bottom:20,width:'80%',min:0,max:100,gap:2,label:{show:true,position:'inside',fontSize:11,formatter:'{b}\n{c}%'},data:[{value:100,name:'Site Visitors',itemStyle:{color:'#ccc'}},{value:45,name:'Product Views',itemStyle:{color:MUT}},{value:18,name:'Add to Cart',itemStyle:{color:WARM}},{value:8,name:'Checkout Started',itemStyle:{color:ACC}},{value:3.2,name:'Purchase (3.2% CVR)',itemStyle:{color:POS}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-aov'));c.setOption({tooltip:{trigger:'axis'},legend:{data:['AOV ($)','Conversion Rate (%)'],top:0,textStyle:{fontSize:10}},grid:{top:40,bottom:30,left:55,right:55},xAxis:{type:'category',data:['Q2 24','Q3 24','Q4 24','Q1 25','Q2 25','Q3 25','Q4 25','Q1 26'],axisLabel:{fontSize:9}},yAxis:[{type:'value',name:'AOV ($)',axisLabel:{fontSize:10}},{type:'value',name:'CVR %',max:5,axisLabel:{fontSize:10}}],series:[{name:'AOV ($)',type:'bar',data:[52,55,62,48,54,58,65,50],itemStyle:{color:ACC},yAxisIndex:0},{name:'Conversion Rate (%)',type:'line',data:[2.8,3.0,3.5,2.5,3.0,3.2,3.8,2.7],lineStyle:{color:POS,width:3},itemStyle:{color:POS},yAxisIndex:1}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-wholesale'));var partners=['Pacsun','Winners\n/ TJX','Zumiez','Nordstrom','Scheels','Buckle','Boathouse','Urban\nOutfitters'];var rev=[1200,900,850,600,450,400,350,300];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:partners,axisLabel:{fontSize:8,interval:0,rotate:20}},yAxis:{type:'value',name:'$K',axisLabel:{fontSize:10}},series:[{type:'bar',data:rev.map(function(v,i){return{value:v,itemStyle:{color:i<3?AV:(i<5?ACC:MUT)}}}),label:{show:true,position:'top',fontSize:9,formatter:'${c}K'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-sellthrough'));var partners=['Winners\n/ TJX','Boathouse','Pacsun','Zumiez','Buckle','Scheels','Urban\nOutfitters','Nordstrom'];var rates=[92,80,78,75,72,70,68,65];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:60,left:55,right:20},xAxis:{type:'category',data:partners,axisLabel:{fontSize:8,interval:0,rotate:20}},yAxis:{type:'value',name:'Sell-Through %',min:50,max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:rates.map(function(v){return{value:v,itemStyle:{color:v>=75?POS:(v>=70?WARM:NEG)}}}),label:{show:true,position:'top',fontSize:10,fontWeight:600,formatter:'{c}%'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-licensing'));var names=['Universal','Lucasfilm','UFC','Live Nation','Tim Hortons','Universities'];var rev=[520,420,380,300,200,180];c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:names,axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'$K',axisLabel:{fontSize:10}},series:[{type:'bar',data:rev.map(function(v,i){return{value:v,itemStyle:{color:[ACC,WARM,AV,TEAL,BLUE,MUT][i]}}}),label:{show:true,position:'top',fontSize:10,formatter:'${c}K'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-approvals'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: {d}%'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n{d}%'},data:[{value:45,name:'Approved\n& In Production',itemStyle:{color:POS}},{value:25,name:'Awaiting\nApproval',itemStyle:{color:WARM}},{value:15,name:'In Design\nReview',itemStyle:{color:ACC}},{value:10,name:'Revision\nRequested',itemStyle:{color:NEG}},{value:5,name:'Pipeline /\nNew Concepts',itemStyle:{color:MUT}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-costs'));c.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},grid:{top:20,bottom:55,left:55,right:20},xAxis:{type:'category',data:['Raw\nMaterials','Production\nLabour','Production\nOverhead','Warehouse\n& Fulfillment','Marketing\n& Digital','Technology\n/ Shopify','G&A','Operating\nMargin'],axisLabel:{fontSize:8,interval:0}},yAxis:{type:'value',name:'% of Revenue',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:35,itemStyle:{color:AV}},{value:20,itemStyle:{color:ACC}},{value:10,itemStyle:{color:WARM}},{value:12,itemStyle:{color:TEAL}},{value:10,itemStyle:{color:BLUE}},{value:5,itemStyle:{color:MUT}},{value:8,itemStyle:{color:'#888'}},{value:10,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:9,formatter:'{c}%'}}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-utilisation'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Screen\nPrinting','Embroidery','Digital\nPrint','Sewing /\nCut & Sew','Finishing\n& Packing'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Utilisation %',max:100,axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:82,itemStyle:{color:POS}},{value:75,itemStyle:{color:POS}},{value:68,itemStyle:{color:WARM}},{value:72,itemStyle:{color:POS}},{value:85,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'{c}%'},barWidth:'50%'},],markLine:{data:[{yAxis:70,label:{formatter:'Target: 70%',fontSize:9},lineStyle:{color:NEG,type:'dashed'}}]}});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-team'));c.setOption({tooltip:{trigger:'item',formatter:'{b}: ~{c} ({d}%)'},series:[{type:'pie',radius:['40%','72%'],center:['50%','55%'],label:{fontSize:10,formatter:'{b}\n~{c}'},data:[{value:15,name:'Production &\nManufacturing',itemStyle:{color:AV}},{value:8,name:'Design &\nCreative',itemStyle:{color:ACC}},{value:7,name:'Warehouse &\nFulfillment',itemStyle:{color:WARM}},{value:6,name:'Sales &\nWholesale',itemStyle:{color:TEAL}},{value:5,name:'E-Commerce\n& Marketing',itemStyle:{color:BLUE}},{value:5,name:'Customer\nService',itemStyle:{color:MUT}},{value:4,name:'Leadership\n& Finance',itemStyle:{color:POS}}]}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-growth'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['2020','2021','2022','2023','2024','2025E','2026E'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'$M',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:5.5,itemStyle:{color:'#ccc'}},{value:7.0,itemStyle:{color:'#bbb'}},{value:8.2,itemStyle:{color:'#aaa'}},{value:9.5,itemStyle:{color:MUT}},{value:10.4,itemStyle:{color:ACC}},{value:11.2,itemStyle:{color:AV}},{value:13.0,itemStyle:{color:POS}}],label:{show:true,position:'top',fontSize:10,formatter:'${c}M'}},{type:'line',data:[5.5,7.0,8.2,9.5,10.4,11.2,13.0],smooth:true,lineStyle:{color:AV,width:2,type:'dashed'},itemStyle:{color:AV},symbol:'none'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-seasonality'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:30,left:55,right:20},xAxis:{type:'category',data:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],axisLabel:{fontSize:10}},yAxis:{type:'value',name:'$K',axisLabel:{fontSize:10}},series:[{type:'bar',data:[650,600,750,800,850,900,950,1100,1200,1050,1150,1400],itemStyle:{color:function(p){return p.dataIndex>=7&&p.dataIndex<=11?ACC:AV}},label:{show:true,position:'top',fontSize:8,formatter:'${c}K'}},{type:'line',data:[650,600,750,800,850,900,950,1100,1200,1050,1150,1400],smooth:true,lineStyle:{color:WARM,width:2},itemStyle:{color:WARM},symbol:'none'}]});window.addEventListener('resize',function(){c.resize()})})();
+
+(function(){var c=echarts.init(document.getElementById('chart-turns'));c.setOption({tooltip:{trigger:'axis'},grid:{top:20,bottom:50,left:55,right:20},xAxis:{type:'category',data:['Licensed\nDrops','DTC\nCore','Wholesale\n(Specialty)','Corporate\n& Uni','Wholesale\n(Off-Price)'],axisLabel:{fontSize:9,interval:0}},yAxis:{type:'value',name:'Turns / Year',axisLabel:{fontSize:10}},series:[{type:'bar',data:[{value:8.5,itemStyle:{color:POS}},{value:5.2,itemStyle:{color:ACC}},{value:4.0,itemStyle:{color:AV}},{value:3.5,itemStyle:{color:TEAL}},{value:6.0,itemStyle:{color:WARM}}],label:{show:true,position:'top',fontSize:11,fontWeight:600,formatter:'{c}x'},barWidth:'50%'}]});window.addEventListener('resize',function(){c.resize()})})();
+</script>
+</body>
+</html>
