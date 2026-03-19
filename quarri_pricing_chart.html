@@ -26,12 +26,15 @@
     font-family: var(--font);
   }
 
+  html, body {
+    overflow: hidden;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
     font-weight: 300;
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
   }
 
   .container {
@@ -580,5 +583,13 @@
   <a href="https://quarri.ai/learn-more" target="_blank">Start your journey</a>
 </div>
 
+<script>
+  // Tell parent iframe to resize to fit content (no inner scrollbar)
+  function notifyParent() {
+    parent.postMessage({ type: 'quarri-resize', height: document.body.scrollHeight }, '*');
+  }
+  new ResizeObserver(notifyParent).observe(document.body);
+  window.addEventListener('load', notifyParent);
+</script>
 </body>
 </html>
