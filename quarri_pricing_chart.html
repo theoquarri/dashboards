@@ -143,6 +143,37 @@
     line-height: 1.6;
     font-weight: 300;
     max-width: 220px;
+    margin-bottom: 20px;
+  }
+
+  /* ─── CTA BUTTON (in cards) ─── */
+  .tier-cta {
+    display: inline-block;
+    width: 100%;
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    text-align: center;
+    border-radius: 6px;
+    transition: background 0.2s ease, transform 0.15s ease;
+    margin-top: auto;
+    background: var(--accent);
+    color: var(--text-light);
+  }
+
+  .tier-cta:hover {
+    background: #333333;
+    transform: translateY(-1px);
+  }
+
+  .tier-card.recommended .tier-cta {
+    background: var(--accent-warm);
+  }
+
+  .tier-card.recommended .tier-cta:hover {
+    background: #c4654a;
   }
 
   /* ─── DARK BANNER ─── */
@@ -306,7 +337,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    margin-bottom: 48px;
+    margin-bottom: 56px;
   }
 
   .addon-card {
@@ -352,6 +383,30 @@
     margin-top: 12px;
   }
 
+  /* ─── BOTTOM CTA ─── */
+  .bottom-cta {
+    text-align: center;
+    padding: 48px 32px 56px;
+  }
+
+  .bottom-cta a {
+    display: inline-block;
+    padding: 16px 48px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--text-light);
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+
+  .bottom-cta a:hover {
+    background: #333333;
+    transform: translateY(-2px);
+  }
+
   /* ─── RESPONSIVE ─── */
   @media (max-width: 860px) {
     .tiers-row { grid-template-columns: repeat(2, 1fr); }
@@ -375,7 +430,7 @@
   <!-- TIER CARDS -->
   <div class="tiers-row">
 
-    <!-- ESSENTIALS — Circle -->
+    <!-- ESSENTIALS -->
     <div class="tier-card">
       <div class="tier-shape">
         <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
@@ -389,9 +444,10 @@
         <span class="tier-period">/mo</span>
       </div>
       <div class="tier-desc">Essential AI analytics for growing teams getting started with connected data</div>
+      <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Start your journey</a>
     </div>
 
-    <!-- SCALE — Triangle -->
+    <!-- SCALE -->
     <div class="tier-card">
       <div class="tier-shape">
         <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
@@ -405,9 +461,10 @@
         <span class="tier-period">/mo</span>
       </div>
       <div class="tier-desc">Deeper data integration and more admin seats for scaling organisations</div>
+      <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Start your journey</a>
     </div>
 
-    <!-- BUSINESS — Square -->
+    <!-- BUSINESS -->
     <div class="tier-card recommended">
       <div class="recommended-tag">Recommended</div>
       <div class="tier-shape">
@@ -422,9 +479,10 @@
         <span class="tier-period">/mo</span>
       </div>
       <div class="tier-desc">Full-featured platform with priority support and custom development included</div>
+      <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Start your journey</a>
     </div>
 
-    <!-- CORPORATE — Hexagon (regular, properly proportioned) -->
+    <!-- CORPORATE -->
     <div class="tier-card">
       <div class="tier-shape">
         <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
@@ -438,6 +496,7 @@
         <span class="tier-period">/mo</span>
       </div>
       <div class="tier-desc">White-glove service with full implementation and a dedicated account contact</div>
+      <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Start your journey</a>
     </div>
 
   </div>
@@ -515,5 +574,11 @@
   </div>
 
 </div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <a href="https://quarri.ai/learn-more" target="_blank">Start your journey</a>
+</div>
+
 </body>
 </html>
