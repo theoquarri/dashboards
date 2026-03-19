@@ -26,10 +26,6 @@
     font-family: var(--font);
   }
 
-  html, body {
-    overflow: hidden;
-  }
-
   body {
     background: var(--bg);
     color: var(--text);
@@ -238,13 +234,15 @@
     background: var(--card);
     border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-bottom: 48px;
   }
 
   .comp-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 640px;
   }
 
   .comp-table thead th {
@@ -423,7 +421,32 @@
     .stat-banner { margin: 0 -16px 48px; }
     .banner-inner { padding: 0 16px; }
     .banner-headline { font-size: 24px; }
-    .comp-table thead th, .comp-table tbody td { padding: 8px 8px; font-size: 11px; }
+
+    /* Sticky first column so feature names stay visible while scrolling */
+    .comp-table thead th:first-child,
+    .comp-table tbody td:first-child,
+    .cat-row td:first-child {
+      position: sticky;
+      left: 0;
+      background: var(--card);
+      z-index: 1;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.04);
+    }
+
+    .cat-row td:first-child {
+      background: #f5f4f1;
+    }
+
+    /* Scroll hint */
+    .table-card::after {
+      content: 'Swipe to compare →';
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 10px 0 4px;
+      font-weight: 400;
+    }
   }
 </style>
 </head>
@@ -583,13 +606,5 @@
   <a href="https://quarri.ai/learn-more" target="_blank">Start your journey</a>
 </div>
 
-<script>
-  // Tell parent iframe to resize to fit content (no inner scrollbar)
-  function notifyParent() {
-    parent.postMessage({ type: 'quarri-resize', height: document.body.scrollHeight }, '*');
-  }
-  new ResizeObserver(notifyParent).observe(document.body);
-  window.addEventListener('load', notifyParent);
-</script>
 </body>
 </html>
