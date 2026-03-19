@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quarri AI — Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:          #f7f6f3;
+    --bg-dark:     #111111;
+    --card:        #ffffff;
+    --text:        #111111;
+    --text-light:  #ffffff;
+    --text-secondary: #555555;
+    --text-on-dark: #b0aea5;
+    --muted:       #888888;
+    --border:      #e0dfdb;
+    --accent:      #111111;
+    --accent-warm: #da7756;
+    --font:        'Archivo', sans-serif;
+  }
+
+  *, *::before, *::after {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: var(--font);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  /* ─── TIER CARDS ─── */
+  .tiers-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .tier-card {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 28px 24px;
+    position: relative;
+    border: 2px solid transparent;
+    transition: box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .tier-card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  }
+
+  .tier-card.recommended {
+    border-color: var(--accent-warm);
+  }
+
+  .recommended-tag {
+    position: absolute;
+    top: -1px;
+    right: 20px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-light);
+    background: var(--accent-warm);
+    padding: 4px 10px 5px;
+    border-radius: 0 0 6px 6px;
+  }
+
+  .tier-shape {
+    width: 108px;
+    height: 108px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tier-shape svg {
+    width: 108px;
+    height: 108px;
+    display: block;
+  }
+
+  .tier-name {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .tier-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+    margin-bottom: 14px;
+  }
+
+  .tier-dollar {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--muted);
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  .tier-amount {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  .tier-period {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-left: 2px;
+  }
+
+  .tier-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+    max-width: 220px;
+  }
+
+  /* ─── DARK BANNER ─── */
+  .stat-banner {
+    background: var(--bg-dark);
+    padding: 48px 0;
+    margin: 0 -32px 48px;
+    text-align: center;
+  }
+
+  .banner-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  .banner-headline {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent-warm);
+    letter-spacing: -0.5px;
+  }
+
+  .banner-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text-on-dark);
+    margin-top: 8px;
+  }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--accent-warm);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 300;
+    max-width: 700px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* ─── COMPARISON TABLE ─── */
+  .table-card {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .comp-table thead th {
+    padding: 16px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    background: var(--card);
+  }
+
+  .comp-table thead th:first-child {
+    text-align: left;
+    padding-left: 24px;
+    width: 260px;
+  }
+
+  .comp-table thead th.col-rec {
+    background: rgba(218, 119, 86, 0.06);
+    border-bottom-color: var(--accent-warm);
+  }
+
+  .th-price {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .comp-table tbody td {
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comp-table tbody td:first-child {
+    text-align: left;
+    padding-left: 24px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 12px;
+  }
+
+  .comp-table tbody td.col-rec {
+    background: rgba(218, 119, 86, 0.04);
+  }
+
+  .comp-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .comp-table tbody tr:hover td {
+    background: rgba(0, 0, 0, 0.015);
+  }
+
+  .comp-table tbody tr:hover td.col-rec {
+    background: rgba(218, 119, 86, 0.07);
+  }
+
+  .cat-row td {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-warm) !important;
+    background: rgba(0,0,0,0.02);
+    padding: 8px 14px !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .cat-row td.col-rec {
+    background: rgba(218, 119, 86, 0.06) !important;
+  }
+
+  .check {
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .dash {
+    color: var(--border);
+    font-size: 16px;
+  }
+
+  /* ─── ADD-ONS ─── */
+  .addons-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .addon-card {
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 24px;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .addon-card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  }
+
+  .addon-name {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-warm);
+    margin-bottom: 8px;
+  }
+
+  .addon-price {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .addon-price-unit {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .addon-note {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+    margin-top: 12px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 860px) {
+    .tiers-row { grid-template-columns: repeat(2, 1fr); }
+    .tier-shape, .tier-shape svg { width: 80px; height: 80px; }
+  }
+
+  @media (max-width: 540px) {
+    .tiers-row { grid-template-columns: 1fr; }
+    .addons-grid { grid-template-columns: 1fr; }
+    .container { padding: 24px 16px; }
+    .stat-banner { margin: 0 -16px 48px; }
+    .banner-inner { padding: 0 16px; }
+    .banner-headline { font-size: 24px; }
+    .comp-table thead th, .comp-table tbody td { padding: 8px 8px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TIER CARDS -->
+  <div class="tiers-row">
+
+    <!-- ESSENTIALS — Circle -->
+    <div class="tier-card">
+      <div class="tier-shape">
+        <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="54" cy="54" r="48" fill="#111111"/>
+        </svg>
+      </div>
+      <div class="tier-name">Essentials</div>
+      <div class="tier-price-row">
+        <span class="tier-dollar">$</span>
+        <span class="tier-amount">500</span>
+        <span class="tier-period">/mo</span>
+      </div>
+      <div class="tier-desc">Essential AI analytics for growing teams getting started with connected data</div>
+    </div>
+
+    <!-- SCALE — Triangle -->
+    <div class="tier-card">
+      <div class="tier-shape">
+        <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+          <path d="M54,8 L100,98 L8,98 Z" fill="#111111" stroke="#111111" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="tier-name">Scale</div>
+      <div class="tier-price-row">
+        <span class="tier-dollar">$</span>
+        <span class="tier-amount">1,200</span>
+        <span class="tier-period">/mo</span>
+      </div>
+      <div class="tier-desc">Deeper data integration and more admin seats for scaling organisations</div>
+    </div>
+
+    <!-- BUSINESS — Square -->
+    <div class="tier-card recommended">
+      <div class="recommended-tag">Recommended</div>
+      <div class="tier-shape">
+        <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="9" width="90" height="90" rx="2" ry="2" fill="#111111"/>
+        </svg>
+      </div>
+      <div class="tier-name">Business</div>
+      <div class="tier-price-row">
+        <span class="tier-dollar">$</span>
+        <span class="tier-amount">2,000</span>
+        <span class="tier-period">/mo</span>
+      </div>
+      <div class="tier-desc">Full-featured platform with priority support and custom development included</div>
+    </div>
+
+    <!-- CORPORATE — Hexagon (regular, properly proportioned) -->
+    <div class="tier-card">
+      <div class="tier-shape">
+        <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+          <path d="M54,6 L96.5,30.5 L96.5,77.5 L54,102 L11.5,77.5 L11.5,30.5 Z" fill="#111111" stroke="#111111" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="tier-name">Corporate</div>
+      <div class="tier-price-row">
+        <span class="tier-dollar">$</span>
+        <span class="tier-amount">3,000</span>
+        <span class="tier-period">/mo</span>
+      </div>
+      <div class="tier-desc">White-glove service with full implementation and a dedicated account contact</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- DARK BANNER -->
+<div class="stat-banner">
+  <div class="banner-inner">
+    <div class="banner-headline">Unlimited AI Queries</div>
+    <div class="banner-sub">Included across every plan</div>
+  </div>
+</div>
+
+<div class="container" style="padding-top: 0;">
+
+  <!-- COMPARISON TABLE -->
+  <div class="section-label">Comparison</div>
+  <div class="section-title">Feature Breakdown</div>
+  <div class="section-desc">Full tier-by-tier comparison of data connections, user access, development support, and training included across all four Quarri subscription plans.</div>
+
+  <div class="table-card">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Essentials<span class="th-price">$500/mo</span></th>
+          <th>Scale<span class="th-price">$1,200/mo</span></th>
+          <th class="col-rec">Business<span class="th-price">$2,000/mo</span></th>
+          <th>Corporate<span class="th-price">$3,000/mo</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="cat-row"><td>Data</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
+        <tr><td>Live data sources</td><td>3</td><td>5</td><td class="col-rec">7</td><td>10</td></tr>
+        <tr><td>Data cleaned &amp; maintained</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Guided setup &amp; onboarding</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Full implementation &amp; data modelling</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
+
+        <tr class="cat-row"><td>AI &amp; Analytics</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
+        <tr><td>Unlimited AI queries</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+
+        <tr class="cat-row"><td>Users &amp; Access</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
+        <tr><td>Admin accounts (agent build access)</td><td>Up to 3</td><td>Up to 5</td><td class="col-rec">Up to 10</td><td>Unlimited</td></tr>
+        <tr><td>Viewer / read-only users</td><td>Unlimited</td><td>Unlimited</td><td class="col-rec">Unlimited</td><td>Unlimited</td></tr>
+        <tr><td>Custom user roles &amp; access controls</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+
+        <tr class="cat-row"><td>Development &amp; Support</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
+        <tr><td>Quarri deployed dashboards</td><td>2</td><td>3</td><td class="col-rec">4</td><td>5</td></tr>
+        <tr><td>Custom development days / month</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec">1</td><td>2</td></tr>
+        <tr><td>Training sessions / year</td><td>1</td><td>Up to 3</td><td class="col-rec">Up to 5</td><td>Up to 8</td></tr>
+        <tr><td>Slack channel support</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Priority support</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Dedicated account contact</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ADD-ONS -->
+  <div class="section-label">Extras</div>
+  <div class="section-title">Add-ons</div>
+  <div class="section-desc">Available for Scale tier and above. No long-term commitment required on any add-on — billed monthly or quoted per project.</div>
+
+  <div class="addons-grid">
+    <div class="addon-card">
+      <div class="addon-name">Additional Data Source</div>
+      <div class="addon-price">$100 <span class="addon-price-unit">/ month per source</span></div>
+      <div class="addon-note">API connection to an additional live data source beyond your plan's included allowance. Billed monthly with no commitment.</div>
+    </div>
+    <div class="addon-card">
+      <div class="addon-name">Additional Development Day</div>
+      <div class="addon-price">$1,000 <span class="addon-price-unit">/ day</span></div>
+      <div class="addon-note">For work beyond your included development day balance. Quoted per project or booked ad hoc as needed.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
