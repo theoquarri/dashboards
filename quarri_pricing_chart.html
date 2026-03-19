@@ -234,15 +234,13 @@
     background: var(--card);
     border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
     margin-bottom: 48px;
   }
 
   .comp-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 640px;
   }
 
   .comp-table thead th {
@@ -408,6 +406,89 @@
     transform: translateY(-2px);
   }
 
+  /* ─── MOBILE COMPARISON (hidden on desktop) ─── */
+  .mobile-comparison { display: none; }
+
+  .mob-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mob-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mob-tab.active {
+    background: var(--accent);
+    color: var(--text-light);
+    border-color: var(--accent);
+  }
+
+  .mob-tab.active-rec {
+    background: var(--accent-warm);
+    color: var(--text-light);
+    border-color: var(--accent-warm);
+  }
+
+  .mob-tier-panel {
+    display: none;
+    background: var(--card);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 20px;
+  }
+
+  .mob-tier-panel.active { display: block; }
+
+  .mob-cat-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent-warm);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .mob-cat-label:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .mob-feature {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  .mob-feature-name {
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .mob-feature-val {
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+  }
+
   /* ─── RESPONSIVE ─── */
   @media (max-width: 860px) {
     .tiers-row { grid-template-columns: repeat(2, 1fr); }
@@ -422,31 +503,9 @@
     .banner-inner { padding: 0 16px; }
     .banner-headline { font-size: 24px; }
 
-    /* Sticky first column so feature names stay visible while scrolling */
-    .comp-table thead th:first-child,
-    .comp-table tbody td:first-child,
-    .cat-row td:first-child {
-      position: sticky;
-      left: 0;
-      background: var(--card);
-      z-index: 1;
-      box-shadow: 2px 0 4px rgba(0,0,0,0.04);
-    }
-
-    .cat-row td:first-child {
-      background: #f5f4f1;
-    }
-
-    /* Scroll hint */
-    .table-card::after {
-      content: 'Swipe to compare →';
-      display: block;
-      text-align: center;
-      font-size: 11px;
-      color: var(--muted);
-      padding: 10px 0 4px;
-      font-weight: 400;
-    }
+    /* Hide desktop table, show mobile cards */
+    .table-card { display: none; }
+    .mobile-comparison { display: block; }
   }
 </style>
 </head>
@@ -581,6 +640,104 @@
     </table>
   </div>
 
+  <!-- MOBILE COMPARISON (hidden on desktop, shown on mobile) -->
+  <div class="mobile-comparison">
+    <div class="mob-tabs">
+      <div class="mob-tab active" onclick="showTier(0, this)">Essentials</div>
+      <div class="mob-tab" onclick="showTier(1, this)">Scale</div>
+      <div class="mob-tab" onclick="showTier(2, this)" data-rec="true">Business</div>
+      <div class="mob-tab" onclick="showTier(3, this)">Corporate</div>
+    </div>
+
+    <!-- Essentials -->
+    <div class="mob-tier-panel active" data-tier="0">
+      <div class="mob-cat-label">Data</div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">3</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Guided setup & onboarding</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-cat-label">AI & Analytics</div>
+      <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Users & Access</div>
+      <div class="mob-feature"><span class="mob-feature-name">Admin accounts</span><span class="mob-feature-val">Up to 3</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Viewer / read-only</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Development & Support</div>
+      <div class="mob-feature"><span class="mob-feature-name">Deployed dashboards</span><span class="mob-feature-val">2</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dev days / month</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Training sessions / year</span><span class="mob-feature-val">1</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Slack support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Priority support</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dedicated contact</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+    </div>
+
+    <!-- Scale -->
+    <div class="mob-tier-panel" data-tier="1">
+      <div class="mob-cat-label">Data</div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">5</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Guided setup & onboarding</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-cat-label">AI & Analytics</div>
+      <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Users & Access</div>
+      <div class="mob-feature"><span class="mob-feature-name">Admin accounts</span><span class="mob-feature-val">Up to 5</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Viewer / read-only</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Development & Support</div>
+      <div class="mob-feature"><span class="mob-feature-name">Deployed dashboards</span><span class="mob-feature-val">3</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dev days / month</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Training sessions / year</span><span class="mob-feature-val">Up to 3</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Slack support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Priority support</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dedicated contact</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+    </div>
+
+    <!-- Business -->
+    <div class="mob-tier-panel" data-tier="2">
+      <div class="mob-cat-label">Data</div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">7</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Guided setup & onboarding</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+      <div class="mob-cat-label">AI & Analytics</div>
+      <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Users & Access</div>
+      <div class="mob-feature"><span class="mob-feature-name">Admin accounts</span><span class="mob-feature-val">Up to 10</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Viewer / read-only</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Development & Support</div>
+      <div class="mob-feature"><span class="mob-feature-name">Deployed dashboards</span><span class="mob-feature-val">4</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dev days / month</span><span class="mob-feature-val">1</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Training sessions / year</span><span class="mob-feature-val">Up to 5</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Slack support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Priority support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dedicated contact</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
+    </div>
+
+    <!-- Corporate -->
+    <div class="mob-tier-panel" data-tier="3">
+      <div class="mob-cat-label">Data</div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">10</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Guided setup & onboarding</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">AI & Analytics</div>
+      <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Users & Access</div>
+      <div class="mob-feature"><span class="mob-feature-name">Admin accounts</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Viewer / read-only</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Development & Support</div>
+      <div class="mob-feature"><span class="mob-feature-name">Deployed dashboards</span><span class="mob-feature-val">5</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dev days / month</span><span class="mob-feature-val">2</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Training sessions / year</span><span class="mob-feature-val">Up to 8</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Slack support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Priority support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dedicated contact</span><span class="mob-feature-val">✓</span></div>
+    </div>
+  </div>
+
   <!-- ADD-ONS -->
   <div class="section-label">Extras</div>
   <div class="section-title">Add-ons</div>
@@ -606,5 +763,13 @@
   <a href="https://quarri.ai/learn-more" target="_blank">Start your journey</a>
 </div>
 
+<script>
+  function showTier(index, tabEl) {
+    document.querySelectorAll('.mob-tier-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.mob-tab').forEach(t => { t.classList.remove('active'); t.classList.remove('active-rec'); });
+    document.querySelector('.mob-tier-panel[data-tier="' + index + '"]').classList.add('active');
+    tabEl.classList.add(tabEl.dataset.rec ? 'active-rec' : 'active');
+  }
+</script>
 </body>
 </html>
