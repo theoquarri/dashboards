@@ -26,6 +26,10 @@
     font-family: var(--font);
   }
 
+  html, body {
+    overflow-x: hidden; /* stat-banner full-bleed negative margins */
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -42,8 +46,8 @@
   /* ─── TIER CARDS ─── */
   .tiers-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
     margin-bottom: 48px;
   }
 
@@ -585,6 +589,21 @@
       <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Start your journey</a>
     </div>
 
+    <!-- ENTERPRISE -->
+    <div class="tier-card">
+      <div class="tier-shape">
+        <svg viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg">
+          <path d="M72.4,9.6 L98.4,35.6 L98.4,72.4 L72.4,98.4 L35.6,98.4 L9.6,72.4 L9.6,35.6 L35.6,9.6 Z" fill="#111111" stroke="#111111" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="tier-name">Enterprise</div>
+      <div class="tier-price-row">
+        <span class="tier-amount">Custom</span>
+      </div>
+      <div class="tier-desc">Tailored deployment for complex organisations - custom limits, terms and support</div>
+      <a href="https://quarri.ai/learn-more" class="tier-cta" target="_blank">Talk to us</a>
+    </div>
+
   </div>
 
 </div>
@@ -602,7 +621,7 @@
   <!-- COMPARISON TABLE -->
   <div class="section-label">Comparison</div>
   <div class="section-title">Feature Breakdown</div>
-  <div class="section-desc">Full tier-by-tier comparison of data connections, user access, development support, and training included across all four Quarri subscription plans.</div>
+  <div class="section-desc">Full tier-by-tier comparison of data connections, user access, development support, and training included across all Quarri subscription plans.</div>
 
   <div class="table-card">
     <table class="comp-table">
@@ -613,36 +632,37 @@
           <th>Scale<span class="th-price">$1,200/mo</span></th>
           <th class="col-rec">Business<span class="th-price">$2,000/mo</span></th>
           <th>Corporate<span class="th-price">$3,000/mo</span></th>
+          <th>Enterprise<span class="th-price">Custom</span></th>
         </tr>
       </thead>
       <tbody>
-        <tr class="cat-row"><td>Data</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
-        <tr><td>Live data sources</td><td>3</td><td>5</td><td class="col-rec">7</td><td>10</td></tr>
-        <tr><td>Data included</td><td>5 GB</td><td>10 GB</td><td class="col-rec">500 GB</td><td>1 TB</td></tr>
-        <tr><td>Data cleaned &amp; maintained</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Full implementation &amp; data modelling</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td>Data</td><td></td><td></td><td class="col-rec"></td><td></td><td></td></tr>
+        <tr><td>Live data sources</td><td>1</td><td>5</td><td class="col-rec">7</td><td>10</td><td>Custom</td></tr>
+        <tr><td>Data included</td><td>1 GB</td><td>10 GB</td><td class="col-rec">500 GB</td><td>1 TB</td><td>Custom</td></tr>
+        <tr><td>Data cleaned &amp; maintained</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Full implementation &amp; data modelling</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
 
-        <tr class="cat-row"><td>AI &amp; Analytics</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
-        <tr><td>Unlimited AI queries</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td>AI &amp; Analytics</td><td></td><td></td><td class="col-rec"></td><td></td><td></td></tr>
+        <tr><td>Unlimited AI queries</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
 
-        <tr class="cat-row"><td>Users &amp; Access</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
-        <tr><td>Users</td><td>3</td><td>5</td><td class="col-rec">10</td><td>25</td></tr>
-        <tr><td>Dashboard viewers</td><td>Unlimited</td><td>Unlimited</td><td class="col-rec">Unlimited</td><td>Unlimited</td></tr>
-        <tr><td>Custom user roles &amp; access controls</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td>Users &amp; Access</td><td></td><td></td><td class="col-rec"></td><td></td><td></td></tr>
+        <tr><td>Users</td><td>1</td><td>5</td><td class="col-rec">10</td><td>25</td><td>Custom</td></tr>
+        <tr><td>Dashboard viewers</td><td>Unlimited</td><td>Unlimited</td><td class="col-rec">Unlimited</td><td>Unlimited</td><td>Unlimited</td></tr>
+        <tr><td>Custom user roles &amp; access controls</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
 
-        <tr class="cat-row"><td>Development &amp; Support</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
-        <tr><td>Included development days</td><td><span class="dash">—</span></td><td>4</td><td class="col-rec">10</td><td>15</td></tr>
-        <tr><td>Ongoing maintenance</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Training sessions / year</td><td><span class="dash">—</span></td><td>1</td><td class="col-rec">2</td><td>4</td></tr>
-        <tr><td>Slack channel support</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Priority support</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Dedicated account contact</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td>Development &amp; Support</td><td></td><td></td><td class="col-rec"></td><td></td><td></td></tr>
+        <tr><td>Included development days</td><td><span class="dash">—</span></td><td>4</td><td class="col-rec">10</td><td>15</td><td>Custom</td></tr>
+        <tr><td>Ongoing maintenance</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Training sessions / year</td><td><span class="dash">—</span></td><td>1</td><td class="col-rec">2</td><td>4</td><td>Custom</td></tr>
+        <tr><td>Slack channel support</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Priority support</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Dedicated account contact</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
 
-        <tr class="cat-row"><td>Available Add-ons</td><td></td><td></td><td class="col-rec"></td><td></td></tr>
-        <tr><td>Additional data source</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Additional development day</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Additional storage</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
-        <tr><td>Additional user seat</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td>Available Add-ons</td><td></td><td></td><td class="col-rec"></td><td></td><td></td></tr>
+        <tr><td>Additional data source</td><td><span class="dash">—</span></td><td><span class="check">✓</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Additional development day</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Additional storage</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Additional user seat</td><td><span class="dash">—</span></td><td><span class="dash">—</span></td><td class="col-rec"><span class="dash">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -654,19 +674,20 @@
       <div class="mob-tab" onclick="showTier(1, this)">Scale</div>
       <div class="mob-tab" onclick="showTier(2, this)" data-rec="true">Business</div>
       <div class="mob-tab" onclick="showTier(3, this)">Corporate</div>
+      <div class="mob-tab" onclick="showTier(4, this)">Enterprise</div>
     </div>
 
     <!-- Essentials -->
     <div class="mob-tier-panel active" data-tier="0">
       <div class="mob-cat-label">Data</div>
-      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">3</span></div>
-      <div class="mob-feature"><span class="mob-feature-name">Data included</span><span class="mob-feature-val">5 GB</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">1</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data included</span><span class="mob-feature-val">1 GB</span></div>
       <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
       <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val">✓</span></div>
       <div class="mob-cat-label">AI & Analytics</div>
       <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
       <div class="mob-cat-label">Users & Access</div>
-      <div class="mob-feature"><span class="mob-feature-name">Users</span><span class="mob-feature-val">3</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Users</span><span class="mob-feature-val">1</span></div>
       <div class="mob-feature"><span class="mob-feature-name">Dashboard viewers</span><span class="mob-feature-val">Unlimited</span></div>
       <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val" style="color:var(--border)">—</span></div>
       <div class="mob-cat-label">Development & Support</div>
@@ -753,6 +774,33 @@
       <div class="mob-feature"><span class="mob-feature-name">Additional storage</span><span class="mob-feature-val">✓</span></div>
       <div class="mob-feature"><span class="mob-feature-name">Additional user seat</span><span class="mob-feature-val">✓</span></div>
     </div>
+
+    <!-- Enterprise -->
+    <div class="mob-tier-panel" data-tier="4">
+      <div class="mob-cat-label">Data</div>
+      <div class="mob-feature"><span class="mob-feature-name">Live data sources</span><span class="mob-feature-val">Custom</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data included</span><span class="mob-feature-val">Custom</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Data cleaned & maintained</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Full implementation & modelling</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">AI & Analytics</div>
+      <div class="mob-feature"><span class="mob-feature-name">Unlimited AI queries</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Users & Access</div>
+      <div class="mob-feature"><span class="mob-feature-name">Users</span><span class="mob-feature-val">Custom</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dashboard viewers</span><span class="mob-feature-val">Unlimited</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Custom roles & access</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Development & Support</div>
+      <div class="mob-feature"><span class="mob-feature-name">Included dev days</span><span class="mob-feature-val">Custom</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Ongoing maintenance</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Training sessions / year</span><span class="mob-feature-val">Custom</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Slack support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Priority support</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Dedicated contact</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-cat-label">Available Add-ons</div>
+      <div class="mob-feature"><span class="mob-feature-name">Additional data source</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Additional dev day</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Additional storage</span><span class="mob-feature-val">✓</span></div>
+      <div class="mob-feature"><span class="mob-feature-name">Additional user seat</span><span class="mob-feature-val">✓</span></div>
+    </div>
   </div>
 
 
@@ -769,6 +817,19 @@
     document.querySelectorAll('.mob-tab').forEach(t => { t.classList.remove('active'); t.classList.remove('active-rec'); });
     document.querySelector('.mob-tier-panel[data-tier="' + index + '"]').classList.add('active');
     tabEl.classList.add(tabEl.dataset.rec ? 'active-rec' : 'active');
+    postHeight();
+  }
+
+  /* Report our rendered height to the embedding page (quarri.ai/pricing)
+     so the iframe can size itself instead of using a fixed height. */
+  function postHeight() {
+    if (window.parent === window) return;
+    window.parent.postMessage({ quarriPricingHeight: document.documentElement.scrollHeight }, '*');
+  }
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(postHeight).observe(document.body);
   }
 </script>
 </body>
