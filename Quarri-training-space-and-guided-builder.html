@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use the Quarri training space and guided builder</title>
+<meta name="description" content="Sign in to Quarri, run the training space on a demo dataset, then use the guided builder on your own data.">
+<style>
+:root { --bone:#f7f6f3; --ink:#111111; --ink2:#555555; --ink3:#888888; --coral:#da7756; --coral-hi:#f0906a;
+        --forest:#102a1c; --on-forest:#a8bdae; --rule:#e5e4e0; --white:#ffffff; color-scheme: light; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bone); color:var(--ink); font-family:'Archivo','Segoe UI',Helvetica,Arial,sans-serif;
+       font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+.wrap { max-width:760px; margin:0 auto; padding-inline:20px; }
+header { background:var(--forest); color:var(--white); }
+header .wrap { padding-block:28px 40px; }
+.brand { display:flex; align-items:center; gap:12px; font-weight:700; font-size:20px; }
+.brand img { width:34px; height:34px; }
+.kicker { font-size:11px; font-weight:700; letter-spacing:2.4px; text-transform:uppercase; color:var(--coral); }
+header .kicker { color:var(--coral-hi); margin-top:36px; }
+h1 { font-size:clamp(28px,5vw,40px); line-height:1.12; letter-spacing:-0.02em; margin:10px 0 12px; text-wrap:balance; }
+header p { color:var(--on-forest); margin:0; max-width:60ch; }
+main .wrap { padding-block:12px 56px; }
+section { padding-top:36px; }
+h2 { font-size:22px; line-height:1.25; margin:8px 0 10px; text-wrap:balance; }
+p { color:var(--ink2); margin:0 0 12px; max-width:68ch; }
+strong { color:var(--ink); }
+.prompt { display:inline-block; background:rgba(218,119,86,.14); color:var(--ink); padding:2px 8px; }
+.tracks { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0 14px; }
+.track { background:var(--white); border:1px solid var(--rule); padding:16px 18px; min-width:0; }
+.track.on { background:var(--coral); border-color:var(--coral); color:var(--white); }
+.track .kicker { font-size:10px; }
+.track.on .kicker { color:var(--white); }
+.track div:last-child { font-weight:600; margin-top:6px; line-height:1.35; }
+.table { overflow-x:auto; margin-top:14px; }
+table { width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--rule); }
+th, td { text-align:left; vertical-align:top; padding:11px 14px; border-top:1px solid var(--rule); font-size:15px; }
+tr:first-child th, tr:first-child td { border-top:0; }
+th { font-weight:600; width:34%; color:var(--ink); }
+td { color:var(--ink2); }
+.note { border-left:4px solid var(--coral); background:var(--white); padding:14px 18px; margin-top:16px; }
+.note p { margin:0; }
+.note.warn { margin:6px 0 18px; }
+a { color:var(--coral); }
+footer { background:var(--forest); color:var(--on-forest); font-size:13px; }
+footer .wrap { padding-block:24px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+footer a { color:var(--coral-hi); text-decoration:none; }
+@media (max-width:520px) { .tracks { grid-template-columns:1fr; } th { width:42%; } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAIAAAD+96djAAAPXklEQVR4AexbCViN2RuXYRZrljHMYOx/wxiiVFSKtBetI5WKiiSyhZCEKAqlLEmlIkVpX1XaS2gYJssYg7HMGEuEYSb/33Tuczp9Fffm3lvzPLfnfc59z+97v+8753e297znq730qP4SAQPt20n+6hiQEFFHQ7t2EiIkRPAY4P1IeoSECB4DvB9Jj5AQwWOA9yPpERIieAzwflq5Rwz4sn90YGjs/oghAwfxStRKP61GxMcdP17ttKw8OVdTVV1dSbU0MWeLq3uXTp1biYfW8yxVFZXsZ9t8+smnpOYdO3ZcaG1fmVlsa2ZJEDGnrdYjMvNzxk5X3BO2/82bN7TOvXr09NuwtTghW15GloLiUcRHxOe9epvqGdJaQXn+omb99s0KBlPTcrOQpfLNsP+lR8Yf8g368ou+FBS1Ig4iunbust5lVWVG8QFv/8atfePWzdmL5s6YO+vnX39ha2uopX82rWDNouWffcobPuxVoesiJ6J3z17FCaeW2S/q9NlnKH1zrZ1fViSro+LmvbH6+TOYEcEM4urocj6jiNOVyFXhpiIn4uGjP6eYaEWcOFpbW0uL3lxr7z18cKzGpNCYSNb4i9590JWyjiaO/t839AlCV0RCBGdsP3ryeLG7q6qpTum5M7QCpLXR+Y20DSgI5cnTJ8s2rlE20iw5V44sFdnvZArjMgM3+2KuoaAQFSET0a1L121unheyStMi4jgNeLHqkraV0bwVTnfu3aUV6Nenb8iOQLT22FFjKAjl8rUqHStj66Xzb/12G1kqsw3NwN3iuY4dOnSgoFAUYRJhbTr7XHrhfAvbjz76SGG8XP7x9N0bfXpK92ALGpeWiLnAO2jny1evKI7Wzo1JQWtjQqEglMTMVDld1S3+22tevECWCKbejcvdypNydaZqEEQoqXCImDBmXMGJjF0e3nAEaLHat28/x8T8fHqhk40DqKH4X6//2hboJ6ujfCI1gYJSUlJobfC4ZF6D1n795vWO/f4TtJVjkuPfvn1L7QcPHBQVEJIcFjt88FAKfojyoURgJtvv7Z8dnfTtyFFNlqNb126bV66HB62hMpU1uPvgvt3KReqz9H+sukxxtLbHsiZa+8HD3+evWjzd3KDy0gVqDGWynELxyWxvN08MSWQ/RD6IiOUOzljbzPQauEmo4dKNq0+XFrLFGjZoyLG94ccbba7OXqxUNtZctG4FJlRqP7iuteMPHuG0NozVzHQXui3FSkSNMVk4WNjCN4fDTsEWKC0kQnPKNExa65a4st4Ohj0G/3gtpbCYqJnzzOEmwVliyzRNSbUsKddr1QZOA0bFH4O7HRC6DwOB2qsqKjfZ2kcTjo/VUNwZHIghRo17dJf2WbsJD58kK09BgRSBicB+OXbf4eigMCjsm2KT4zHsMfhp+eA4KxlO/+n6FdYMDeg4x+6HRpur5y9q3HdsmainhruoPYzR2jDmtPaLly89d22T05mSnJ1GjaGMGDIsJfx4xO4DA/p9haxAIhgRmK7REdSV1dh3XLpahXXRYdViDAoWx6RQEJcJV5IFiS7dXRqbq8L4LCwuBCHpr3duoR8Z2s2+euM6QZDCGK1dknhKaaIislRu3/vNaomDvq1Z1c9XKQhFT137QnYpeit0/kUwIrCAs48mzg+anfWUYIDOErPvMCaFoV8PRpYIZoH49CSik3T0iJFwN7C54jRgXkmBvL4ax90eOXREUmgMWvvr/gPJ7SQtLC9RNJjmumU9CkMQkmL+IgqfqWBE0If+/fff+yJCiDtMQShdOnUma8R0ptfA+F/febri3OULta2Mb97+FZZU4G6Xp+StXbySnW5w9d9bNCYdOhbxzz//IEsErV2WlOPusprsXAiINPhIGApzICoU70K2BdJCIsrOV6zZ5lHNbJDwbitjczgCTjYOiLIgSwTLB2lezAJASs+Vy+tP9T0QwIYh4G6vmL+4IrWAswChkZd7uikZahSdKcW9RD75+JOl9k540eyZpgQhKQqzysu9rLKCZJtNm7nQQiI4TyMOlb+nz+e9etNLWDLMnWyxfEChIJTOnTp179oNHhR0VrBDgUvS2N3GFKBnYzrHxQEzCLWH/xK4xS83JgWvpuCHKEIgQm2SCsehwqy+bvumCdrK6XnZbOHQmBi6mMnszK2xIrCXqA53Oy82NchrJ8fdTspKG6c5eePOrVikqfG40d/h1crykyjSrt75rMf40YRARNcuXeib4AUfiY8Zq6EYGHaAgkRBt69Izcdk3oWJ0CIYYzLfysTBEgoxI6n5DBO4ai52CxHjJQhJdx0MktGcHJ14Ai8iCFLpbt2R8kSK9yvojxCIYF+5abe307rlrOeHq0pyivkn0tHt+/f7ElkimDLW+nhiA3aqMO9U0WkoyAIkV5GCrw1L12BqxASJLBW4245rXDbv9qFIbS3TDRiVGvCjCJmI5zU17FuxfB7ZcygpLGbMyNEUr62tRZwGrmRQeDAFoSALMDIumm3tQQO+xpKZ3GhzxVLWvj3TDRgVz+RfhEwE+2LsxzEWtNWmsyCWGwSsFru7wq1gcaIDdF6/UsVYs7zyLEFIis1VeXLeAsu5JIuUJYvZlLZrzTkCxWpSJso0CMnD77R3ddayNPzxyk9N2lMQBpoWM7HdvPf7fQpCkR07HikRdtGRYnsBqxNT/lIR9gi2ALtD9srqKB9POcmC79YRgMC6g50YNcOYojrbI2rb4BxBC8pRgg4Hs8se52pzWdwSGFY/jyDSQy2lpOqbvq3PEbTQ/wlFTEOjxVy8ZWa/WuZAoMmhgW3LqOEjW/autk6EVDspWjF2aFAQipSUFPamWGKxkUWEBkgLpK0T0VyPYKuKeC+iFVhiWZCzALOXmtTbOhFSzfQI9AJaH2xPqA4Fi+6C1UuwAEPnX9o6Ec31CDjgTVaSxP6PJcU1efUdoOiJeMfL+bjUuEdgA7536y5s3jh34zToO3UFnAZh0eVc4ifb1olge0THDh0Rv8GudJaBMTs0EDTVtzHD+SCimPzUuUmbtk4E2yMMNHQ4Eb0/Hz+qOzHWKDxTwlYPQdOTIUdZ5L16WyeiuQogNomgJs5QQmMiWZ8Cc8cWV3ccrE1RUGru3iZxMRHhZG3Pic02WRoOiFucbOw5ILIIYSgYTOWEuYHbmlniyGuhtT0bNAXOj4iJCJwDnEnJN9GdyU+ZiI2pnmFFaoGz7QKSJen1mze+d7RGUIsT0ZKXkS1OyMZZCXsKTW7hMxUTESjNV337BfsE4CDj2/d9+AIDmB3w9kc4FzcSQSQGISw53SmZ+TkEISnORML89qVHxnNOkvyC9xADPlPxEUEKhKOt08fTEe/u2fC7CXIVYMCm7TCAGUGQYosRHnsEwSuEsJClgoHj5ryiPCVvhqYuBaGk5mQizLtplzd0/kVMRFRcOE/LhC0DTkB+yCrhdHtkAVoazYIBNS4+W4aIlovHqkdPHlMQConurlywBGciyBK59svPOD2wcJ7HBv7JpfemYiIChbN0trvFfAeE6d1zxdqK1HycpOJsHQqyAGmJ79y7a7vMUXeOCQJWFIQydtSYjKiTiPd/0bsPskRwFLRy87qJeqo4TyKIoKkIiWBXNegpORlyuqrosTXMd0CI7pKzdSi06C9evty6xxdx7ZMZyRSEgpOOoLpDnYnjJiBLBAeCOO+T0VY+eDScIC1LRUgE6/wR/fWb15jDEIDDXgDUNFlihPPgHfjs3UU/L4AZTjdwxgGf0nymKXkUQEjRmVLFGU2cAP83HCocTGB32Pg7oB+rLqvP0keAFwaoJBXdaVo43cAZBztwfrl108J5np6NKeYFagkFNm3aoQrfuZ/ztSH5DginQag2BIqysSZAVIbK8MFDEW6J9A/G6QYFn9U89/DzmqivhtWBglDQU2zMLNBr2rRDheWwMC5z54ZtWCBRaCo4H5TTmYKxAIWCUKS7S29ftxlnGZxwC45/MHcgJg4XG2ZUJssqFNQ9H/MIBQVSBJsj/A/tFejpHON/Wyy90HGOHYujhTE7sggMzqcV4KCYBRFxUjXVwfHP7w//YHHiUCWHx44e0SBauWO/P2v2Xl0wIjb4einoTy2uKHvvc5sz6Na1m9eqDVgsVeQnN7YBWJaUCwP0CHr1t/v3MHEg4vTD5YsUhNK8Q5UBhwqBCdjwL4IRgedeuXFN19rE3XcLdP4F7ckaY7FMOBSNY1H6HRCUqIAQgCOGDGMtvYN2yumqYClhQehwqM6mFTR2qAzmfm/hbCc+h+rcxUqUhn+xWmKPndLla1XsLTgWrcwo8ljmtmnlOiicT4rhRIxRl98W6MeJOFGHql+f+n9refz0yYpNa+FQFZQVs6/gXxe4RzR+dPWz+v+waHyVItg7T545HYMcawQFoSAGvchmPhQqWEe1rYzgVsK5pCCUPr0/37dtd15sKutQAT90LEJGSykk+jD0FosQiMgrKVAx1swpOs1PITDtj9OYjA7P+pf0xoeP/sS2QsVEq5T5hwZcJQ4VxsL3+kbIUoFDjV6w3NPtafVTCrZMEQIRePHFqsvGDpYYn9dv3kD23fLqr1fo8PAvQQpric0lQGw0OU6n7lTNMyl5HIfqxq2b5AMtjkPFPlAgXThEkFdifOYW5xOdk4b67R3T8Kt1DBAMk0kz1HFLel42KEC4obrhZ3oIMSD0GBlwcOBXA+gDq59VwxL2uIuCH64Ik4h3lGbSBPm82LRdHt4ch+qn61eM7C3Qtmhh9nbpOoeqIC6DDT2SwISMlhL6DmssFF2ERHj4eiVl1X8rjSiDtens83UOFfvvG5xqwMzBwpY4VKwZZg3MHZhBOIEJzu0tzoqQCJwyzHFxgNNxlfmwmjhU8JrgOzUuNMCShFPebp7oEfTq7bt3bJYtwDpy6X2f2tBbWqCIkAhSGrihijOmrfZyZyd24lAdDQyFH0XMoMC/4jhUWFngIMrqTEnISCFmoktFTgSKjrG9Pyp0vLZyWEwUslS0VNXhR1GHSrvhZ2fRiSdkdVRwlokoBr1FdIo4iCClx9heunG1kpEGG7/EpcYOVeWlC9hfOa5xuf/HAxiIR8RHBKkPxjlCMthE3X3Q4Is5chUn+qi/mpkuZ39Froo0FTcRpDLYRMnqKCNsR+Nx8LJ8DwTAO8CIIDZiToVIhGAlx1YKgdy+MsN6jB4A6Td++ObdPgAFe4rwrFuNCOFVQThPkhDB41FChIQIHgO8H0mPkBDBY4D3I+kREiJ4DPB+JD1CQgSPAd7P/wEAAP//iDsvggAAAAZJREFUAwCZ2pWbnd9BNQAAAABJRU5ErkJggg==" alt="">Quarri</div>
+  <div class="kicker">Quarri guide</div>
+  <h1>How to use the Quarri training space and guided builder</h1>
+  <p>Learn Quarri on a demo dataset, then build dashboards, apps, alerts and reports on your own data.</p>
+</div></header>
+<main><div class="wrap">
+
+<section>
+  <div class="kicker">Step 1</div>
+  <h2>Sign in</h2>
+  <p>Go to <a href="https://app.quarri.ai/login">app.quarri.ai</a> and continue with <strong>Google or Microsoft</strong>,
+  or ask for a sign-in link by email. Passwords still work, with an authenticator app or passkey if you use one.</p>
+</section>
+
+<section>
+  <div class="kicker">Step 2 &middot; Learn</div>
+  <h2>Learn to use Quarri in your role, in the Quarri training space</h2>
+  <p>In Claude, type <span class="prompt">Get started with Quarri</span> and pick the training space. Quarri takes you
+  through it step by step, so you learn to ask questions, build dashboards, set alerts and run reports the way you
+  would in your job.</p>
+  <p>You practise on your own copy of sample data: an invented business with two years of data on what comes in,
+  what&rsquo;s made, what&rsquo;s in stock and what goes out to customers, with public price data beside it. It has
+  the problems a real business has, so there&rsquo;s something to find. <strong>Nothing you do there touches your own
+  data.</strong></p>
+  <p>After a quick tour, pick a track:</p>
+  <div class="tracks">
+    <div class="track on"><div class="kicker">Build track</div><div>Set up a dashboard and its alert, an order desk app and a weekly Excel report</div></div>
+    <div class="track"><div class="kicker">Connect track</div><div>See how data comes in through a connector and gets organised so Claude can answer questions on it</div></div>
+  </div>
+  <p>Your copy is kept for 14 days after you last use it.</p>
+</section>
+
+<section>
+  <div class="kicker">Step 3 &middot; Build</div>
+  <h2>Build on your own data with the Quarri guided builder</h2>
+  <div class="note warn"><p><strong>Before you build.</strong> Building is token-intensive, especially dashboards and
+  apps, so it uses up your Claude plan&rsquo;s usage limits much faster than asking questions does. Keep an eye on your
+  limits, build one thing at a time, and save big builds for when you have the room.</p></div>
+  <p>Back in your own workspace, describe what you need in Claude. Quarri&rsquo;s guided builder plans it with you
+  first, then builds it on your Quarri data. For example:</p>
+  <div class="table"><table><tr><th scope="row">Plan what to build</th><td>&ldquo;What should we build first?&rdquo;</td></tr><tr><th scope="row">A dashboard</th><td>&ldquo;Build a dashboard of last month&rsquo;s sales by site&rdquo;</td></tr><tr><th scope="row">An app</th><td>&ldquo;Make an app where the team logs stock adjustments for approval&rdquo;</td></tr><tr><th scope="row">Alerts and scheduled emails</th><td>&ldquo;Email me when weekly sales drop more than 10%&rdquo;</td></tr><tr><th scope="row">An Excel report</th><td>&ldquo;Rebuild this workbook every Monday and send it to the managers&rdquo;</td></tr><tr><th scope="row">An Excel export</th><td>&ldquo;Export this month&rsquo;s figures by product to Excel&rdquo;</td></tr><tr><th scope="row">A map</th><td>&ldquo;Show sales by site on a map&rdquo;</td></tr><tr><th scope="row">New data</th><td>&ldquo;Bring in daily weather for our locations&rdquo;</td></tr><tr><th scope="row">A change</th><td>&ldquo;Add last year to the sales dashboard&rdquo;</td></tr><tr><th scope="row">Your terms</th><td>&ldquo;When we say margin, we mean after freight&rdquo;</td></tr></table></div>
+  <div class="note"><p><strong>Use Claude Code for dashboards, apps and alerts.</strong> Those are built as code, so
+  open Claude Code for them. Everything else works in claude.ai or the Claude desktop app.</p></div>
+</section>
+
+<section>
+  <div class="kicker">Help</div>
+  <h2>When you need us</h2>
+  <p>If Claude reaches something it can&rsquo;t do, it can send your request straight to the Quarri team. And if
+  you&rsquo;d like us to take your team through it, email <a href="mailto:theo@quarri.ai">theo@quarri.ai</a>.</p>
+</section>
+
+</div></main>
+<footer><div class="wrap">
+  <div>Quarri &middot; <a href="https://quarri.ai">quarri.ai</a> &middot; <a href="mailto:theo@quarri.ai">theo@quarri.ai</a></div>
+  <div>Guide updated October 2026</div>
+</div></footer>
+</body>
+</html>
